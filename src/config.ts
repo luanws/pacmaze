@@ -3,12 +3,11 @@ import { GameScene } from './scenes/game-scene'
 import { MainMenuScene } from './scenes/main-menu-scene'
 
 export const GameConfig: Phaser.Types.Core.GameConfig = {
-    title: 'Snake',
-    url: 'https://github.com/digitsensitive/phaser3-typescript',
+    title: 'Pacmaze',
     version: '2.0',
-    width: 256,
-    height: 224,
-    zoom: 3,
+    width: 256 * 3,
+    height: 224 * 3,
+    zoom: 1,
     type: Phaser.AUTO,
     parent: 'game',
     scene: [BootScene, MainMenuScene, GameScene],
@@ -19,5 +18,8 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
         gamepad: false
     },
     backgroundColor: '#000000',
-    render: { pixelArt: true, antialias: false }
+    render: {
+        pixelArt: false,
+        antialias: false
+    }
 }
