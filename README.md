@@ -48,7 +48,7 @@ O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_d
 
 ### Editor de fases
 
-No menu principal, entre em **Editor de fases**. Lá você desenha paredes, posiciona o pac, a pílula, os fantasmas (com as rotas) e os portais, salva e testa a fase sem sair do jogo. As fases salvas aparecem em **Selecionar fase → Fases criadas**.
+No menu principal, entre em **Editor de fases**. Lá você desenha paredes, posiciona o pac, a pílula, os fantasmas (com as rotas) e os portais, salva e testa a fase sem sair do jogo. **Salvar** e **Abrir** usam a janela de arquivos do sistema operacional, então a fase pode ficar em qualquer pasta. As fases salvas na pasta padrão (`user://levels/`) aparecem em **Selecionar fase → Fases criadas**.
 
 ## Rodando o projeto
 
@@ -65,9 +65,9 @@ godot --path .
 1. **Instale os export templates** da mesma versão do editor. No Godot, vá em **Editor → Gerenciar Modelos de Exportação → Baixar e Instalar**. Pela linha de comando, baixe o `.tpz` da [página de downloads](https://godotengine.org/download/archive/) e instale pelo mesmo menu com **Instalar do Arquivo**.
 2. **Crie os presets de exportação** em **Projeto → Exportar… → Adicionar…**:
    - **Windows Desktop**
-     - Marque **Embed PCK** para gerar um `.exe` único.
+	 - Marque **Embed PCK** para gerar um `.exe` único.
    - **Web**
-     - Desmarque **Thread Support**. Assim o jogo roda em qualquer servidor estático, sem os cabeçalhos COOP/COEP.
+	 - Desmarque **Thread Support**. Assim o jogo roda em qualquer servidor estático, sem os cabeçalhos COOP/COEP.
    - Nos dois presets, em **Recursos → Filtros para exportar arquivos que não são recursos**, coloque `levels/*.json`. Isso garante que as fases da campanha entram no pacote.
 
    Os presets ficam salvos em `export_presets.cfg`, que pode ser versionado.
@@ -113,4 +113,7 @@ O jogo fica em <https://luanws.github.io/pacmaze/>.
 Diferenças na versão web:
 
 - O botão **Sair** não aparece no menu.
-- No editor de fases, **Salvar** e **Abrir** usam o armazenamento do navegador (IndexedDB), não o disco do computador. As fases criadas continuam no mesmo navegador, mas não viram arquivos no seu computador.
+- No editor de fases, **Salvar** e **Abrir** usam a janela de arquivos do sistema, através do navegador:
+  - No Chrome e no Edge você escolhe a pasta e o nome do arquivo. Os próximos **Salvar** gravam no mesmo arquivo sem perguntar de novo.
+  - Nos outros navegadores, **Salvar** baixa o `.json` para a pasta de downloads.
+  - Uma cópia de cada fase salva também fica no armazenamento do navegador. Assim ela aparece em **Selecionar fase → Fases criadas**.

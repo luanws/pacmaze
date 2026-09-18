@@ -44,6 +44,10 @@ var has_pending_portal := false
 var hover_cell := Vector2i(-1, -1)
 var _status_serial := 0
 var _tool_buttons := {}
+## Only set on the web build, where levels are saved and opened through the browser.
+var _web: WebFiles
+## The level whose file the browser can overwrite without asking again. Static so it survives test runs.
+static var _web_file_owner: LevelData
 
 @onready var camera: Camera2D = $Camera2D
 @onready var preview_container: Node2D = $PreviewContainer
@@ -88,6 +92,13 @@ func _ready() -> void:
 	time_spin.value_changed.connect(func(value: float) -> void: data.time_sensitivity = int(value))
 	overlay.draw.connect(_draw_overlay)
 	get_viewport().size_changed.connect(_fit_camera)
+
+	if OS.has_feature("web"):
+		_web = WebFiles.new()
+		_web.saved.connect(_on_web_saved)
+		_web.downloaded.connect(_on_web_downloaded)
+		_web.opened.connect(_on_web_opened)
+		_web.failed.connect(func(message: String) -> void: _show_status("Erro ao acessar o arquivo: %s" % message))
 
 	var initial := GameState.editor_data if GameState.editor_data else LevelData.create_empty()
 	_set_data(initial, GameState.editor_path)
@@ -449,18 +460,32 @@ func _confirm_new() -> void:
 
 
 func _open_dialog(mode: FileDialog.FileMode) -> void:
+	var saving := mode == FileDialog.FILE_MODE_SAVE_FILE
+	if _web:
+		if saving:
+			_web.save(data.to_json(), _file_name_for(data.name), true)
+		else:
+			_web.open()
+		return
+	var title := "Salvar fase" if saving else "Abrir fase"
+	var start_dir := ProjectSettings.globalize_path(GameState.USER_LEVELS_DIR)
+	var file_name := _file_name_for(data.name) if saving else ""
+	var filters := PackedStringArray(["*.json ; Fase do Pacmaze"])
+	if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
+		var native_mode := DisplayServer.FILE_DIALOG_MODE_SAVE_FILE if saving else DisplayServer.FILE_DIALOG_MODE_OPEN_FILE
+		DisplayServer.file_dialog_show(title, start_dir, file_name, false, native_mode, filters,
+			func(status: bool, paths: PackedStringArray, _filter: int) -> void:
+				if status and not paths.is_empty():
+					(_write if saving else _load).call_deferred(paths[0]))
+		return
 	var dialog := FileDialog.new()
+	dialog.title = title
 	dialog.file_mode = mode
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
-	dialog.filters = PackedStringArray(["*.json ; Fase do Pacmaze"])
-	dialog.current_dir = ProjectSettings.globalize_path(GameState.USER_LEVELS_DIR)
-	if mode == FileDialog.FILE_MODE_SAVE_FILE:
-		dialog.title = "Salvar fase"
-		dialog.current_file = _file_name_for(data.name)
-		dialog.file_selected.connect(_write)
-	else:
-		dialog.title = "Abrir fase"
-		dialog.file_selected.connect(_load)
+	dialog.filters = filters
+	dialog.current_dir = start_dir
+	dialog.current_file = file_name
+	dialog.file_selected.connect(_write if saving else _load)
 	dialog.visibility_changed.connect(func() -> void:
 		if not dialog.visible:
 			dialog.queue_free())
@@ -469,8 +494,10 @@ func _open_dialog(mode: FileDialog.FileMode) -> void:
 
 
 func _save() -> void:
+	if _web:
+		_web.save(data.to_json(), _file_name_for(data.name), _web_file_owner != data)
 	# Campaign files live inside the game package, which is read-only once exported.
-	if path.is_empty() or path.begins_with("res://"):
+	elif path.is_empty() or path.begins_with("res://"):
 		_open_dialog(FileDialog.FILE_MODE_SAVE_FILE)
 	else:
 		_write(path)
@@ -483,9 +510,7 @@ func _write(target: String) -> void:
 	if error != OK:
 		_show_status("Não foi possível salvar: %s" % error_string(error))
 		return
-	path = target
-	GameState.editor_path = path
-	_update_file_label()
+	_set_path(target)
 	_show_status("Fase salva.")
 
 
@@ -495,6 +520,39 @@ func _load(source: String) -> void:
 		_show_status("Não foi possível abrir: o arquivo não é uma fase válida.")
 		return
 	_set_data(loaded, source)
+	_show_status("Fase aberta.")
+
+
+func _set_path(new_path: String) -> void:
+	path = new_path
+	GameState.editor_path = path
+	_update_file_label()
+
+
+func _on_web_saved(file_name: String) -> void:
+	_web_file_owner = data
+	_after_web_save(file_name, "Fase salva.")
+
+
+func _on_web_downloaded(file_name: String) -> void:
+	_after_web_save(file_name, "Fase baixada para a pasta de downloads.")
+
+
+## A copy also goes to the browser storage, so the level shows up in the level select screen.
+func _after_web_save(file_name: String, message: String) -> void:
+	data.save_file(GameState.USER_LEVELS_DIR.path_join(file_name))
+	_set_path(file_name)
+	_show_status(message)
+
+
+func _on_web_opened(file_name: String, text: String) -> void:
+	var loaded := LevelData.from_json(text)
+	if loaded == null:
+		_show_status("Não foi possível abrir: o arquivo não é uma fase válida.")
+		return
+	_web.accept_opened()
+	_web_file_owner = loaded
+	_set_data(loaded, file_name)
 	_show_status("Fase aberta.")
 
 

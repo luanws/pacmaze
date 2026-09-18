@@ -80,9 +80,14 @@ static func load_file(path: String) -> LevelData:
 	if text.is_empty():
 		push_warning("Could not read level file: %s" % path)
 		return null
+	return from_json(text)
+
+
+## Parses the contents of a level file. Returns null if it isn't a Pacmaze level.
+static func from_json(text: String) -> LevelData:
 	var parsed: Variant = JSON.parse_string(text)
 	if not parsed is Dictionary or parsed.get("format") != FORMAT:
-		push_warning("Not a Pacmaze level file: %s" % path)
+		push_warning("Not a Pacmaze level")
 		return null
 	return from_dict(parsed)
 
