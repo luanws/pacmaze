@@ -104,6 +104,12 @@ python -m http.server 8000 --directory build/web
 
 Depois acesse <http://localhost:8000>. Para publicar, envie o conteúdo de `build/web/` para qualquer hospedagem estática (GitHub Pages, itch.io, Netlify…).
 
+### Publicação automática no GitHub Pages
+
+O workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) compila a versão web e publica no GitHub Pages a cada push na `main`. Também dá para rodá-lo à mão pela aba **Actions**. Para ele funcionar, é preciso configurar o repositório uma vez: em **Settings → Pages → Build and deployment → Source**, escolha **GitHub Actions**.
+
+O jogo fica em <https://luanws.github.io/pacmaze/>.
+
 Diferenças na versão web:
 
 - O botão **Sair** não aparece no menu.
