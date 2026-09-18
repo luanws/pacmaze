@@ -11,6 +11,9 @@ O jogador conduz o pac por um labirinto até a pílula branca. Depois que se esc
 | Setas | Movimentam o pac |
 | `D` | Volta o pac ao início da fase |
 | `Esc` / `P` | Pausa |
+| `F11` / `Alt+Enter` | Alterna entre tela cheia e janela |
+
+No Windows o jogo abre em tela cheia.
 
 ## Fases
 
