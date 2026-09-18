@@ -18,26 +18,32 @@ tile_set = ExtResource("2_xsrpe")
 
 [node name="Portal1A" type="Node2D" parent="Portals" unique_id=366546057 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(345, 15)
+modulate = Color(1, 0, 0, 1)
 partner = NodePath("../Portal1B")
 
 [node name="Portal1B" type="Node2D" parent="Portals" unique_id=776372458 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(-495, -315)
+modulate = Color(1, 0, 0, 1)
 partner = NodePath("../Portal1A")
 
 [node name="Portal2A" type="Node2D" parent="Portals" unique_id=648484922 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(15, -15)
+modulate = Color(1, 1, 0, 1)
 partner = NodePath("../Portal2B")
 
 [node name="Portal2B" type="Node2D" parent="Portals" unique_id=671713457 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(15, 45)
+modulate = Color(1, 1, 0, 1)
 partner = NodePath("../Portal2A")
 
 [node name="Portal3A" type="Node2D" parent="Portals" unique_id=1464604407 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(615, -345)
+modulate = Color(0, 1, 0, 1)
 partner = NodePath("../Portal3B")
 
 [node name="Portal3B" type="Node2D" parent="Portals" unique_id=1729760910 node_paths=PackedStringArray("partner") instance=ExtResource("3_0kxia")]
 position = Vector2(165, -345)
+modulate = Color(0, 1, 0, 1)
 partner = NodePath("../Portal3A")
 
 [node name="Pill" type="Node2D" parent="." unique_id=1839659684 instance=ExtResource("5_v7ucw")]
