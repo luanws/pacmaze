@@ -3,7 +3,7 @@ extends Node2D
 
 enum Tool { WALL, BORDER, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL }
 
-const PANEL_WIDTH := 360.0
+const PANEL_WIDTH := 320.0
 const MARGIN := 24.0
 const STATUS_DURATION := 4.0
 const TOOL_NAMES := {
@@ -135,7 +135,6 @@ func _build_tool_buttons() -> void:
 		button.button_group = group
 		button.focus_mode = Control.FOCUS_NONE
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 16)
 		button.tooltip_text = "%s (%d)" % [TOOL_NAMES[t], t + 1]
 		button.pressed.connect(_select_tool.bind(t))
 		tool_grid.add_child(button)

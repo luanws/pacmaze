@@ -2,21 +2,24 @@
 
 [ext_resource type="Script" path="res://scripts/level_editor.gd" id="1_editor"]
 
+[sub_resource type="Theme" id="Theme_panel"]
+default_font_size = 14
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.09, 0.09, 0.12, 1)
 border_width_left = 2
 border_color = Color(0, 0.63, 0.9, 1)
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 
 [sub_resource type="LabelSettings" id="LabelSettings_section"]
-font_size = 18
+font_size = 16
 font_color = Color(0.95, 0.92, 0.13, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_hint"]
-font_size = 16
+font_size = 13
 font_color = Color(0.7, 0.7, 0.7, 1)
 
 [node name="LevelEditor" type="Node2D"]
@@ -37,9 +40,10 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -360.0
+offset_left = -320.0
 grow_horizontal = 0
 grow_vertical = 2
+theme = SubResource("Theme_panel")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Scroll" type="ScrollContainer" parent="UI/Panel"]
@@ -49,60 +53,53 @@ horizontal_scroll_mode = 0
 [node name="Content" type="VBoxContainer" parent="UI/Panel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Editor de fases"
 horizontal_alignment = 1
 
 [node name="FileButtons" type="GridContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 columns = 3
 
 [node name="NewButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Novo"
 
 [node name="OpenButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Abrir"
 
 [node name="SaveButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Salvar"
 
 [node name="SaveAsButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Salvar como"
 
 [node name="TestButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Testar"
 
 [node name="BackButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Menu"
 
 [node name="FileLabel" type="Label" parent="UI/Panel/Scroll/Content"]
@@ -127,7 +124,7 @@ columns = 4
 
 [node name="ToolHint" type="Label" parent="UI/Panel/Scroll/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 label_settings = SubResource("LabelSettings_hint")
 autowrap_mode = 3
@@ -142,14 +139,12 @@ layout_mode = 2
 [node name="Label" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions/ColorRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Cor"
 
 [node name="GhostColor" type="OptionButton" parent="UI/Panel/Scroll/Content/GhostOptions/ColorRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 
 [node name="SpeedRow" type="HBoxContainer" parent="UI/Panel/Scroll/Content/GhostOptions"]
 layout_mode = 2
@@ -157,12 +152,11 @@ layout_mode = 2
 [node name="Label" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions/SpeedRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Velocidade (células/s)"
 
 [node name="GhostSpeed" type="SpinBox" parent="UI/Panel/Scroll/Content/GhostOptions/SpeedRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 0.5
 max_value = 30.0
@@ -176,19 +170,17 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Desfazer trecho"
 
 [node name="ClearRouteButton" type="Button" parent="UI/Panel/Scroll/Content/GhostOptions/RouteButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Limpar rota"
 
 [node name="RouteInfo" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 label_settings = SubResource("LabelSettings_hint")
 autowrap_mode = 3
@@ -200,12 +192,11 @@ layout_mode = 2
 [node name="Label" type="Label" parent="UI/Panel/Scroll/Content/PortalOptions"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Cor do par"
 
 [node name="PortalColor" type="ColorPickerButton" parent="UI/Panel/Scroll/Content/PortalOptions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 32)
+custom_minimum_size = Vector2(120, 28)
 layout_mode = 2
 color = Color(1, 0, 0, 1)
 edit_alpha = false
@@ -221,7 +212,6 @@ label_settings = SubResource("LabelSettings_section")
 [node name="NameEdit" type="LineEdit" parent="UI/Panel/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 placeholder_text = "Nome da fase"
 
 [node name="InstructionsLabel" type="Label" parent="UI/Panel/Scroll/Content"]
@@ -231,9 +221,8 @@ label_settings = SubResource("LabelSettings_hint")
 
 [node name="InstructionsEdit" type="TextEdit" parent="UI/Panel/Scroll/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
 wrap_mode = 1
 
 [node name="Scoring" type="GridContainer" parent="UI/Panel/Scroll/Content"]
@@ -243,41 +232,38 @@ columns = 2
 [node name="BonusLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Bônus da fase"
 
 [node name="BonusSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 max_value = 10000.0
 
 [node name="MovesLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Peso dos movimentos"
 
 [node name="MovesSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 max_value = 10000.0
 
 [node name="TimeLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Peso do tempo"
 
 [node name="TimeSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 max_value = 10000.0
 
 [node name="ScoringHint" type="Label" parent="UI/Panel/Scroll/Content"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 text = "Pontos = bônus + peso dos movimentos ÷ movimentos + peso do tempo ÷ segundos"
 label_settings = SubResource("LabelSettings_hint")
@@ -287,7 +273,7 @@ autowrap_mode = 3
 layout_mode = 2
 
 [node name="Help" type="Label" parent="UI/Panel/Scroll/Content"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 text = "Botão esquerdo: usar a ferramenta
 Botão direito: apagar
