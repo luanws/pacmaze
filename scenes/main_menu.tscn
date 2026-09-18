@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_script"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
+theme_override_font_sizes/font_size = 80
+text = "Pacmaze"
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="Center/VBox"]
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+text = "1. Use as setas para iniciar o jogo e movimentar o pac.
+2. O movimento na direção selecionada só para quando o pac atinge um obstáculo.
+3. O pac deve atravessar o labirinto evitando os fantasmas e chegar ao portal luminoso."
+autowrap_mode = 3
+
+[node name="Buttons" type="VBoxContainer" parent="Center/VBox"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="PlayButton" type="Button" parent="Center/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Jogar"
+
+[node name="SelectButton" type="Button" parent="Center/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Selecionar fase"
+
+[node name="QuitButton" type="Button" parent="Center/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sair"
