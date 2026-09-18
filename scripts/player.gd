@@ -83,7 +83,8 @@ func _advance(distance: float) -> void:
 	var tile := level.tile_size()
 	while distance > 0.0 and direction != Vector2i.ZERO:
 		var next := cell + direction
-		if level.is_wall(next):
+		# Leaving the map counts as hitting a wall, even without border blocks.
+		if level.is_wall(next) or not level.is_inside(next):
 			direction = Vector2i.ZERO
 			return
 		var target := level.cell_to_position(next)

@@ -1,13 +1,14 @@
 class_name Level
 extends Node2D
-## A maze level. Walls live in a TileMapLayer; entities query the level for collisions.
+## A playable maze, built from a LevelData. Entities query it for collisions.
 
 signal completed
 
-@export var next_level_score := 10
-@export var move_sensitivity := 200
-@export var time_sensitivity := 100
-@export_multiline var instructions := ""
+var level_bonus := 10
+var move_sensitivity := 200
+var time_sensitivity := 100
+var instructions := ""
+var grid_size := Vector2i.ZERO
 
 var move_count := 0
 var elapsed := 0.0
@@ -38,6 +39,10 @@ func is_wall(cell: Vector2i) -> bool:
 	return walls.get_cell_source_id(cell) != -1
 
 
+func is_inside(cell: Vector2i) -> bool:
+	return Rect2i(Vector2i.ZERO, grid_size).has_point(cell)
+
+
 func cell_to_position(cell: Vector2i) -> Vector2:
 	return walls.map_to_local(cell)
 
@@ -47,20 +52,18 @@ func position_to_cell(pos: Vector2) -> Vector2i:
 
 
 func get_ghosts() -> Array[Node]:
-	return get_tree().get_nodes_in_group("ghosts")
+	return $Ghosts.get_children()
 
 
 func get_portal_at(cell: Vector2i) -> Portal:
-	for portal: Portal in get_tree().get_nodes_in_group("portals"):
+	for portal: Portal in $Portals.get_children():
 		if position_to_cell(to_local(portal.global_position)) == cell:
 			return portal
 	return null
 
 
 func get_bounds() -> Rect2:
-	var used := walls.get_used_rect()
-	var size := tile_size()
-	return Rect2(Vector2(used.position) * size, Vector2(used.size) * size)
+	return Rect2(Vector2.ZERO, Vector2(grid_size) * tile_size())
 
 
 func register_move() -> void:
@@ -78,4 +81,4 @@ func complete() -> void:
 func compute_score() -> int:
 	var moves := maxf(move_count, 1.0)
 	var seconds := maxf(roundf(elapsed), 1.0)
-	return roundi(next_level_score + move_sensitivity / moves + time_sensitivity / seconds)
+	return roundi(level_bonus + move_sensitivity / moves + time_sensitivity / seconds)

@@ -10,7 +10,9 @@ func _ready() -> void:
 	hide()
 	resume_button.pressed.connect(close)
 	restart_button.pressed.connect(GameState.restart_level)
-	menu_button.pressed.connect(GameState.go_to_main_menu)
+	menu_button.pressed.connect(GameState.leave_level)
+	if GameState.mode == GameState.Mode.EDITOR_TEST:
+		menu_button.text = "Voltar ao editor"
 
 
 func _unhandled_input(event: InputEvent) -> void:

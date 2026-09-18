@@ -8,10 +8,6 @@ extends Node2D
 @onready var sprite: Sprite2D = $Sprite2D
 
 
-func _ready() -> void:
-	add_to_group("portals")
-
-
 func _process(delta: float) -> void:
 	sprite.rotation += deg_to_rad(rotation_speed) * delta
 

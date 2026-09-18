@@ -20,12 +20,17 @@ var level: Level
 
 
 func _ready() -> void:
-	var scene: PackedScene = load(GameState.level_scene_path(GameState.current_level))
-	level = scene.instantiate()
+	var data := GameState.current_level_data()
+	if data == null:
+		push_error("Level could not be loaded")
+		GameState.leave_level.call_deferred()
+		set_process(false)
+		return
+	level = data.instantiate()
 	level_container.add_child(level)
 	level.completed.connect(_on_level_completed)
 	level.player.moved.connect(instructions.hide)
-	level_label.text = "Fase %d/%d" % [GameState.current_level, GameState.LEVEL_COUNT]
+	level_label.text = GameState.level_title(data)
 	instructions_label.text = level.instructions
 	instructions.visible = not level.instructions.is_empty()
 	complete_panel.hide()
@@ -40,7 +45,7 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause") and not level.finished:
+	if event.is_action_pressed("pause") and level and not level.finished:
 		pause_menu.open()
 		get_viewport().set_input_as_handled()
 
