@@ -2,6 +2,8 @@ extends Node2D
 ## Loads the current level, keeps the HUD up to date and handles level completion.
 
 const HUD_HEIGHT := 56.0
+const KEY_TEXTURE := preload("res://assets/sprites/key.png")
+const KEY_ICON_SIZE := Vector2(40, 36)
 const COMPLETE_DELAY := 1.5
 
 var level: Level
@@ -12,6 +14,7 @@ var level: Level
 @onready var moves_label: Label = %MovesLabel
 @onready var time_label: Label = %TimeLabel
 @onready var score_label: Label = %ScoreLabel
+@onready var keys_bar: HBoxContainer = %KeysBar
 @onready var instructions: Control = %Instructions
 @onready var instructions_label: Label = %InstructionsLabel
 @onready var complete_panel: Control = %CompletePanel
@@ -30,6 +33,8 @@ func _ready() -> void:
 	level_container.add_child(level)
 	level.completed.connect(_on_level_completed)
 	level.player.moved.connect(instructions.hide)
+	level.keys_changed.connect(_update_keys_bar)
+	_update_keys_bar()
 	level_label.text = GameState.level_title(data)
 	instructions_label.text = level.instructions
 	instructions.visible = not level.instructions.is_empty()
@@ -48,6 +53,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and level and not level.finished:
 		pause_menu.open()
 		get_viewport().set_input_as_handled()
+
+
+## One icon, in the key's color, for each key the pac is carrying.
+func _update_keys_bar() -> void:
+	for icon in keys_bar.get_children():
+		icon.queue_free()
+	for key in level.get_held_keys():
+		var icon := TextureRect.new()
+		icon.texture = KEY_TEXTURE
+		icon.modulate = key.modulate
+		icon.custom_minimum_size = KEY_ICON_SIZE
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		keys_bar.add_child(icon)
 
 
 func _fit_camera() -> void:

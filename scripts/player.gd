@@ -73,10 +73,13 @@ func _die() -> void:
 func _read_input() -> void:
 	for action: String in DIRECTIONS:
 		if Input.is_action_just_pressed(action):
-			direction = DIRECTIONS[action]
-			sprite.rotation = Vector2(direction).angle()
+			var chosen: Vector2i = DIRECTIONS[action]
+			sprite.rotation = Vector2(chosen).angle()
 			level.register_move()
 			moved.emit()
+			# Pushing against a door with its key opens it, but the pac stays put until the next command.
+			if not level.try_open_door(cell + chosen):
+				direction = chosen
 			return
 
 
@@ -111,7 +114,7 @@ func _advance(distance: float) -> void:
 func _on_cell_entered() -> void:
 	var key := level.get_key_at(cell)
 	if key and not key.collected:
-		key.collect()
+		level.collect_key(key)
 	var portal := level.get_portal_at(cell)
 	if portal == null:
 		inside_portal = null

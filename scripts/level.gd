@@ -3,6 +3,7 @@ extends Node2D
 ## A playable maze, built from a LevelData. Entities query it for collisions.
 
 signal completed
+signal keys_changed
 
 var level_bonus := 10
 var move_sensitivity := 200
@@ -38,7 +39,7 @@ func tile_size() -> float:
 func is_wall(cell: Vector2i) -> bool:
 	if walls.get_cell_source_id(cell) != -1:
 		return true
-	var door := _get_at(cell, $Doors) as Door
+	var door := get_door_at(cell)
 	return door != null and not door.is_open
 
 
@@ -66,10 +67,43 @@ func get_key_at(cell: Vector2i) -> Key:
 	return _get_at(cell, $Keys) as Key
 
 
+func get_door_at(cell: Vector2i) -> Door:
+	return _get_at(cell, $Doors) as Door
+
+
+## Keys the pac is carrying: collected and not used on their door yet.
+func get_held_keys() -> Array[Key]:
+	var held: Array[Key] = []
+	for key: Key in $Keys.get_children():
+		if key.collected and not key.used:
+			held.append(key)
+	return held
+
+
+func collect_key(key: Key) -> void:
+	key.collect()
+	keys_changed.emit()
+
+
+## Opens the closed door at the cell if the pac carries its key, which is used up.
+func try_open_door(cell: Vector2i) -> bool:
+	var door := get_door_at(cell)
+	if door == null or door.is_open:
+		return false
+	for key in get_held_keys():
+		if key.door == door:
+			key.used = true
+			door.set_open(true)
+			keys_changed.emit()
+			return true
+	return false
+
+
 ## Puts every key back and closes the doors, for when the pac restarts.
 func reset_keys() -> void:
 	for key: Key in $Keys.get_children():
 		key.reset()
+	keys_changed.emit()
 
 
 func _get_at(cell: Vector2i, parent: Node) -> Node2D:

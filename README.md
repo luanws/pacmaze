@@ -9,6 +9,7 @@ O jogador conduz o pac por um labirinto até a pílula branca. Depois que se esc
 | Tecla | Ação |
 | --- | --- |
 | Setas | Movimentam o pac |
+| Seta contra uma porta | Abre a porta, se o pac tiver a chave da mesma cor |
 | `D` | Volta o pac ao início da fase |
 | `Esc` / `P` | Pausa |
 | `F11` / `Alt+Enter` | Alterna entre tela cheia e janela |
@@ -50,7 +51,7 @@ O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_d
 ```
 
 - `portals`: pares de portais. Entrar em um leva ao outro.
-- `locks`: pares de chave e porta. A porta (`door`) bloqueia o pac como uma parede até ele passar pela chave (`key`) da mesma cor. Quando o pac morre ou volta ao início, as chaves e as portas voltam ao lugar.
+- `locks`: pares de chave e porta. A porta (`door`) bloqueia o pac como uma parede. Passando pela chave (`key`), o pac a guarda, e ela aparece no topo da tela. Para abrir a porta, o pac precisa estar parado ao lado dela e apertar a seta na direção da porta. A chave é gasta, a porta se abre e o pac continua parado até o próximo comando. Quando o pac morre ou volta ao início, as chaves e as portas voltam ao lugar.
 
 ### Editor de fases
 

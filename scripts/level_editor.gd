@@ -26,7 +26,7 @@ const TOOL_HINTS := {
 	Tool.GHOST: "Clique numa célula para criar um fantasma, ou num fantasma para selecioná-lo. Depois use a ferramenta Rota.",
 	Tool.ROUTE: "Clique em células na mesma linha ou coluna do fim da rota (linhas destacadas) para adicionar trechos ao fantasma selecionado. A rota se repete em loop.",
 	Tool.PORTAL: "Clique em duas células livres para criar um par de portais.",
-	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. A porta bloqueia o pac até ele pegar a chave da mesma cor.",
+	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. Com a chave da mesma cor, o pac abre a porta empurrando contra ela.",
 }
 const GHOST_COLOR_LABELS := ["Azul", "Verde", "Roxo", "Amarelo"]
 const GHOST_DRAW_COLORS := [
