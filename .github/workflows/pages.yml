@@ -47,12 +47,17 @@ jobs:
           mv /tmp/templates/templates/web_* "$templates/"
           mv /tmp/templates/templates/version.txt "$templates/"
 
+      # GitHub Pages serves everything with max-age=600, so the .js/.wasm/.pck fetched by the page stay cached
+      # after a deploy. Naming them after the commit makes every deploy load fresh files; only the HTML keeps
+      # a fixed name, and browsers revalidate it on reload.
       - name: Export web build
         run: |
+          name=pacmaze-${GITHUB_SHA::8}
           mkdir -p build/web
           ~/godot/godot --headless --path . --import
-          ~/godot/godot --headless --path . --export-release "Web" build/web/index.html
-          test -f build/web/index.html
+          ~/godot/godot --headless --path . --export-release "Web" build/web/$name.html
+          mv build/web/$name.html build/web/index.html
+          test -f build/web/$name.pck
 
       - uses: actions/upload-pages-artifact@v5
         with:
