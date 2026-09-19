@@ -2,12 +2,14 @@ class_name LevelData
 extends RefCounted
 ## A level as plain data: read from / written to a JSON file and turned into a playable Level.
 ##
-## File format (all cells are [column, row], counted from the top-left corner):
+## File format (all cells are [column, row], counted from the top-left corner). The border is
+## always the outer ring of the grid, so only walls need listing:
 ## {
-##   "format": "pacmaze-level", "version": 1,
+##   "format": "pacmaze-level", "version": 2,
 ##   "name": "...", "instructions": "...",
 ##   "scoring": {"level_bonus": 10, "move_sensitivity": 200, "time_sensitivity": 100},
-##   "map": ["+++", "+.+", ...],       # "+" border block, "." empty, wall: "#" or another WALL_CHARS style
+##   "size": [width, height],
+##   "walls": [{"cell": [x, y], "style": "classic"}],
 ##   "player": [x, y], "pill": [x, y],
 ##   "ghosts": [{"color": "blue", "cell": [x, y], "speed": 7.5, "path": [[dx, dy], ...]}],
 ##   "portals": [{"color": "#ff0000", "a": [x, y], "b": [x, y]}],
@@ -17,14 +19,13 @@ extends RefCounted
 enum Cell { EMPTY, WALL, BORDER }
 
 const FORMAT := "pacmaze-level"
-const VERSION := 1
+const VERSION := 2
 const TILE_SIZE := 30
 const DEFAULT_SIZE := Vector2i(43, 27)
-const CELL_CHARS := {Cell.EMPTY: ".", Cell.BORDER: "+"}
-const CHAR_CELLS := {".": Cell.EMPTY, "+": Cell.BORDER}
-## Map character of each wall style, in the order of row 1 of the walls atlas: classic,
-## neon, red brick, gem, metal, grass, crate, ice, lava, circuit, candy.
-const WALL_CHARS := "#abcdefghij"
+## Name of each wall style, in the order of row 1 of the walls atlas.
+const WALL_STYLE_NAMES := [
+	"classic", "neon", "red_brick", "gem", "metal", "grass", "crate", "ice", "lava", "circuit", "candy",
+]
 const GHOST_COLOR_NAMES := ["blue", "green", "purple", "yellow"]
 const DEFAULT_GHOST_SPEED := 7.5
 
@@ -67,7 +68,7 @@ var move_sensitivity := 200
 var time_sensitivity := 100
 var size := DEFAULT_SIZE
 var cells := PackedByteArray()
-var wall_styles := PackedByteArray() ## Style of each wall cell, an index into WALL_CHARS.
+var wall_styles := PackedByteArray() ## Style of each wall cell, an index into WALL_STYLE_NAMES.
 var player := Vector2i.ZERO
 var pill := Vector2i.ZERO
 var ghosts: Array[GhostData] = []
@@ -81,13 +82,18 @@ static func create_empty(level_size := DEFAULT_SIZE) -> LevelData:
 	data.size = level_size
 	data.cells.resize(level_size.x * level_size.y)
 	data.wall_styles.resize(data.cells.size())
-	for y in level_size.y:
-		for x in level_size.x:
-			if x == 0 or y == 0 or x == level_size.x - 1 or y == level_size.y - 1:
-				data.set_cell(Vector2i(x, y), Cell.BORDER)
+	data._add_border()
 	data.player = Vector2i(1, level_size.y - 2)
 	data.pill = Vector2i(level_size.x - 2, 1)
 	return data
+
+
+## The border is always the outer ring of the grid, so it's never stored in the file.
+func _add_border() -> void:
+	for y in size.y:
+		for x in size.x:
+			if x == 0 or y == 0 or x == size.x - 1 or y == size.y - 1:
+				set_cell(Vector2i(x, y), Cell.BORDER)
 
 
 static func load_file(path: String) -> LevelData:
@@ -108,11 +114,8 @@ static func from_json(text: String) -> LevelData:
 
 
 static func from_dict(d: Dictionary) -> LevelData:
-	var rows: Array = d.get("map", [])
-	var width := 0
-	for row: String in rows:
-		width = maxi(width, row.length())
-	if rows.is_empty() or width == 0:
+	var size := _to_cell(d.get("size"), Vector2i.ZERO)
+	if size.x <= 0 or size.y <= 0:
 		push_warning("Level has no map")
 		return null
 
@@ -123,17 +126,13 @@ static func from_dict(d: Dictionary) -> LevelData:
 	data.level_bonus = int(scoring.get("level_bonus", data.level_bonus))
 	data.move_sensitivity = int(scoring.get("move_sensitivity", data.move_sensitivity))
 	data.time_sensitivity = int(scoring.get("time_sensitivity", data.time_sensitivity))
-	data.size = Vector2i(width, rows.size())
-	data.cells.resize(width * rows.size())
+	data.size = size
+	data.cells.resize(size.x * size.y)
 	data.wall_styles.resize(data.cells.size())
-	for y in rows.size():
-		var row: String = rows[y]
-		for x in row.length():
-			var style := WALL_CHARS.find(row[x])
-			if style >= 0:
-				data.set_wall(Vector2i(x, y), style)
-			else:
-				data.set_cell(Vector2i(x, y), CHAR_CELLS.get(row[x], Cell.EMPTY))
+	data._add_border()
+	for w: Dictionary in d.get("walls", []):
+		var style := maxi(WALL_STYLE_NAMES.find(w.get("style", "classic")), 0)
+		data.set_wall(_to_cell(w.get("cell"), Vector2i.ZERO), style)
 	data.player = _to_cell(d.get("player"), Vector2i(1, data.size.y - 2))
 	data.pill = _to_cell(d.get("pill"), Vector2i(data.size.x - 2, 1))
 
@@ -178,16 +177,15 @@ static func _from_cell(cell: Vector2i) -> Array:
 
 
 func to_dict() -> Dictionary:
-	var rows: Array[String] = []
+	var wall_list := []
 	for y in size.y:
-		var row := ""
 		for x in size.x:
 			var cell := Vector2i(x, y)
 			if get_cell(cell) == Cell.WALL:
-				row += WALL_CHARS[get_wall_style(cell)]
-			else:
-				row += CELL_CHARS[get_cell(cell)]
-		rows.append(row)
+				wall_list.append({
+					"cell": _from_cell(cell),
+					"style": WALL_STYLE_NAMES[get_wall_style(cell)],
+				})
 	var ghost_list := []
 	for ghost in ghosts:
 		ghost_list.append({
@@ -220,7 +218,8 @@ func to_dict() -> Dictionary:
 			"move_sensitivity": move_sensitivity,
 			"time_sensitivity": time_sensitivity,
 		},
-		"map": rows,
+		"size": _from_cell(size),
+		"walls": wall_list,
 		"player": _from_cell(player),
 		"pill": _from_cell(pill),
 		"ghosts": ghost_list,
@@ -229,7 +228,7 @@ func to_dict() -> Dictionary:
 	}
 
 
-## JSON with one map row / ghost / portal per line, so files stay readable and diffable.
+## JSON with one wall / ghost / portal per line, so files stay readable and diffable.
 func to_json() -> String:
 	var d := to_dict()
 	var lines := PackedStringArray()
@@ -282,7 +281,7 @@ func get_wall_style(cell: Vector2i) -> int:
 	return wall_styles[cell.y * size.x + cell.x] if is_inside(cell) else 0
 
 
-## Makes the cell a wall of the given style (an index into WALL_CHARS).
+## Makes the cell a wall of the given style (an index into WALL_STYLE_NAMES).
 func set_wall(cell: Vector2i, style: int) -> void:
 	if is_inside(cell):
 		set_cell(cell, Cell.WALL)

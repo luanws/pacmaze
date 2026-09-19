@@ -2,3 +2,7 @@
 .godot/
 /android/
 /build/
+
+# Python (tools/ scripts)
+__pycache__/
+*.py[cod]

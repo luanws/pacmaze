@@ -27,7 +27,7 @@ const TOOL_HINTS := {
 	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. Com a chave da mesma cor, o pac abre a porta empurrando contra ela.",
 }
 const WALLS_TEXTURE := preload("res://assets/sprites/walls.png")
-## Same order as LevelData.WALL_CHARS.
+## Same order as LevelData.WALL_STYLE_NAMES.
 const WALL_STYLE_LABELS := [
 	"Clássica", "Neon", "Tijolo vermelho", "Gema", "Metal", "Grama",
 	"Caixote", "Gelo", "Lava", "Circuito", "Doce",
@@ -62,7 +62,7 @@ var pending_cell := Vector2i.ZERO
 var has_pending := false
 var hover_cell := Vector2i(-1, -1)
 var pair_color_index := 0
-var wall_style_index := 0 ## Style painted by the wall tool, an index into LevelData.WALL_CHARS.
+var wall_style_index := 0 ## Style painted by the wall tool, an index into LevelData.WALL_STYLE_NAMES.
 var _space_held := false
 var _panning := false
 var _status_serial := 0
