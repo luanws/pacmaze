@@ -95,14 +95,15 @@ func restart_level() -> void:
 	_change_scene(GAME_SCENE)
 
 
-func complete_level(level_score: int) -> void:
+## `focus` is the screen point the transition to the next campaign level closes on.
+func complete_level(level_score: int, focus: Variant = null) -> void:
 	match mode:
 		Mode.CAMPAIGN:
 			score += level_score
 			_unlock_level(current_level + 1)
 			if current_level < campaign_size():
 				current_level += 1
-				_change_scene(GAME_SCENE)
+				Transition.change_scene(GAME_SCENE, "Fase %d" % current_level, focus)
 			else:
 				_change_scene(GAME_OVER_SCENE)
 		Mode.CUSTOM:

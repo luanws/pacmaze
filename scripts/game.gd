@@ -42,6 +42,7 @@ func _ready() -> void:
 	complete_panel.hide()
 	get_viewport().size_changed.connect(_fit_camera)
 	_fit_camera()
+	Transition.focus_on(_player_screen_position())
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 
 
@@ -89,4 +90,9 @@ func _on_level_completed() -> void:
 	complete_panel.show()
 	Sfx.play("complete")
 	await get_tree().create_timer(COMPLETE_DELAY).timeout
-	GameState.complete_level(gained)
+	GameState.complete_level(gained, _player_screen_position())
+
+
+func _player_screen_position() -> Vector2:
+	var offset := level.player.global_position - camera.position
+	return offset * camera.zoom + get_viewport_rect().size / 2

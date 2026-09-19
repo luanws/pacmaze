@@ -21,6 +21,7 @@ boot_splash/bg_color=Color(0, 0, 0, 1)
 
 GameState="*res://scripts/game_state.gd"
 Sfx="*res://scripts/sfx.gd"
+Transition="*res://scripts/transition.gd"
 
 [display]
 
