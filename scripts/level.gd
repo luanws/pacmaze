@@ -5,6 +5,22 @@ extends Node2D
 signal completed
 signal keys_changed
 
+## Floor inside the border: a faint checkerboard, one square per cell, lit a little toward the center.
+const FLOOR_SHADER := """
+shader_type canvas_item;
+
+uniform vec2 cells = vec2(1.0);
+
+void fragment() {
+	// Offset by half a cell: the rect starts in the middle of the border cells.
+	vec2 cell = floor(UV * cells + 0.5);
+	float checker = mod(cell.x + cell.y, 2.0);
+	vec3 color = mix(vec3(0.045, 0.055, 0.115), vec3(0.055, 0.067, 0.135), checker);
+	color += vec3(0.01, 0.025, 0.05) * (1.0 - smoothstep(0.0, 0.75, length(UV - 0.5)));
+	COLOR = vec4(color, 1.0);
+}
+"""
+
 var level_bonus := 10
 var move_sensitivity := 200
 var time_sensitivity := 100
@@ -27,9 +43,29 @@ func _enter_tree() -> void:
 	pill = $Pill
 
 
+func _ready() -> void:
+	_add_floor()
+
+
 func _process(delta: float) -> void:
 	if not finished:
 		elapsed += delta
+
+
+## Covers the grid up to the middle of the border cells, so it never shows past the outer walls.
+func _add_floor() -> void:
+	var shader := Shader.new()
+	shader.code = FLOOR_SHADER
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("cells", Vector2(grid_size - Vector2i.ONE))
+	var floor_rect := ColorRect.new()
+	floor_rect.material = material
+	floor_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	floor_rect.position = Vector2.ONE * tile_size() * 0.5
+	floor_rect.size = Vector2(grid_size - Vector2i.ONE) * tile_size()
+	add_child(floor_rect)
+	move_child(floor_rect, 0)
 
 
 func tile_size() -> float:

@@ -22,6 +22,7 @@ boot_splash/bg_color=Color(0, 0, 0, 1)
 GameState="*res://scripts/game_state.gd"
 Sfx="*res://scripts/sfx.gd"
 Transition="*res://scripts/transition.gd"
+Background="*res://scripts/background.gd"
 
 [display]
 
@@ -115,4 +116,4 @@ textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+environment/defaults/default_clear_color=Color(0.02, 0.024, 0.055, 1)
