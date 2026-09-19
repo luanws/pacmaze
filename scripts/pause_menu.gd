@@ -25,8 +25,10 @@ func open() -> void:
 	show()
 	get_tree().paused = true
 	resume_button.grab_focus()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func close() -> void:
 	hide()
 	get_tree().paused = false
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
