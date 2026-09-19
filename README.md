@@ -13,7 +13,7 @@ O jogador conduz o pac por um labirinto até a pílula branca. Depois que se esc
 | `D` | Volta o pac ao início da fase |
 | `Esc` / `P` | Pausa |
 | `F11` / `Alt+Enter` | Alterna entre tela cheia e janela |
-| `M` | Liga e desliga o som |
+| `M` | Liga e desliga o som e a música |
 
 No Windows o jogo abre em tela cheia.
 
@@ -128,5 +128,5 @@ Diferenças na versão web:
 
 ## Créditos
 
-- Os efeitos sonoros são sintetizados pelo próprio jogo, em [`scripts/sfx.gd`](scripts/sfx.gd).
+- A música e os efeitos sonoros são sintetizados pelo próprio jogo, em [`scripts/sfx.gd`](scripts/sfx.gd).
 - As imagens da chave e do cadeado (`assets/sprites/key.png` e `assets/sprites/lock.png`) são dos pacotes *Game Icons* e *Game Icons Expansion*, da [Kenney](https://kenney.nl), publicados sob a licença [CC0](https://creativecommons.org/publicdomain/zero/1.0/).

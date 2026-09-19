@@ -1,5 +1,5 @@
 extends Node
-## Retro sound effects, synthesized at startup so the project needs no audio files.
+## Retro sound effects and background music, synthesized at startup so the project needs no audio files.
 ## Every button in the game clicks automatically. `M` mutes and unmutes.
 
 enum Wave { SQUARE, TRIANGLE, SINE, NOISE }
@@ -7,10 +7,26 @@ enum Wave { SQUARE, TRIANGLE, SINE, NOISE }
 const MIX_RATE := 22050
 const VOICES := 8
 const ATTACK := 0.004 ## Seconds.
+const MUSIC_VOLUME_DB := -6.0
+const BEAT := 60.0 / 132.0 ## Seconds per beat.
+const STEP := BEAT / 4.0 ## A sixteenth note.
+## Background loop in A minor, one bar per entry. Notes are MIDI numbers with lengths in sixteenths.
+const MELODY := [
+	[[69, 2], [72, 2], [76, 2], [81, 2], [79, 2], [76, 2], [72, 4]],
+	[[77, 2], [76, 2], [72, 2], [69, 2], [72, 4], [69, 2], [65, 2]],
+	[[76, 2], [79, 2], [84, 4], [83, 2], [79, 2], [76, 4]],
+	[[74, 4], [71, 2], [67, 2], [74, 2], [71, 2], [67, 4]],
+	[[81, 4], [79, 2], [76, 2], [72, 2], [76, 2], [69, 4]],
+	[[77, 2], [81, 2], [79, 2], [77, 2], [76, 4], [72, 4]],
+	[[74, 2], [79, 2], [83, 2], [86, 2], [83, 2], [79, 2], [74, 4]],
+	[[76, 4], [80, 2], [83, 2], [76, 2], [74, 2], [71, 4]],
+]
+const BASS := [45, 41, 48, 43, 45, 41, 43, 40] ## Root of each bar.
 
 var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
 var _next_player := 0
+var _music_player: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -31,6 +47,13 @@ func _ready() -> void:
 		"click": _build(_tone(Wave.SQUARE, 700, 900, 0.035, 0.12)),
 	}
 	get_tree().node_added.connect(_on_node_added)
+	_music_player = AudioStreamPlayer.new()
+	_music_player.stream = _build(_compose_music())
+	_music_player.stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	_music_player.stream.loop_end = _music_player.stream.data.size() / 2
+	_music_player.volume_db = MUSIC_VOLUME_DB
+	add_child(_music_player)
+	_music_player.play()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -52,6 +75,39 @@ func play(sound: String, pitch_variation := 0.0) -> void:
 func _on_node_added(node: Node) -> void:
 	if node is BaseButton:
 		node.pressed.connect(play.bind("click"))
+
+
+## Chiptune loop: square lead, triangle bass jumping octaves, kick on the beats and noise hi-hats.
+func _compose_music() -> PackedFloat32Array:
+	var bar_length := int(STEP * 16 * MIX_RATE)
+	var song := PackedFloat32Array()
+	song.resize(bar_length * MELODY.size())
+	for bar in MELODY.size():
+		var start := bar * bar_length
+		var offset := 0
+		for note: Array in MELODY[bar]:
+			var hz := _midi_to_hz(note[0])
+			_add(song, _tone(Wave.SQUARE, hz, hz, note[1] * STEP, 0.07), start + int(offset * STEP * MIX_RATE))
+			offset += note[1]
+		for eighth in 8:
+			var at := start + int(eighth * 2 * STEP * MIX_RATE)
+			var bass := _midi_to_hz(BASS[bar] + (12 if eighth % 2 else 0))
+			_add(song, _tone(Wave.TRIANGLE, bass, bass, 2 * STEP, 0.22), at)
+			if eighth % 4 == 0:
+				_add(song, _tone(Wave.TRIANGLE, 150, 40, 0.12, 0.3), at)
+			else:
+				_add(song, _tone(Wave.NOISE, 8000, 8000, 0.03, 0.04), at)
+	return song
+
+
+func _midi_to_hz(note: int) -> float:
+	return 440.0 * pow(2.0, (note - 69) / 12.0)
+
+
+## Mixes samples into the buffer starting at the offset, dropping what doesn't fit.
+func _add(buffer: PackedFloat32Array, samples: PackedFloat32Array, offset: int) -> void:
+	for i in mini(samples.size(), buffer.size() - offset):
+		buffer[offset + i] += samples[i]
 
 
 ## A single note that slides from one frequency to another and fades out.
