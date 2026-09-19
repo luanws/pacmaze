@@ -60,6 +60,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and level and not level.finished:
 		pause_menu.open()
 		get_viewport().set_input_as_handled()
+	elif instructions.visible and event.is_pressed():
+		instructions.hide()
 
 
 ## One icon, in the key's color, for each key the pac is carrying.
