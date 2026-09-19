@@ -58,6 +58,8 @@ var pending_cell := Vector2i.ZERO
 var has_pending := false
 var hover_cell := Vector2i(-1, -1)
 var pair_color_index := 0
+var _space_held := false
+var _panning := false
 var _status_serial := 0
 var _tool_buttons := {}
 ## Only set on the web build, where levels are saved and opened through the browser.
@@ -123,14 +125,31 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_S and event.ctrl_pressed:
-			_save()
-		elif event.keycode >= KEY_1 and event.keycode < KEY_1 + Tool.size():
-			_select_tool(event.keycode - KEY_1)
-		return
+	if event is InputEventKey:
+		if event.keycode == KEY_SPACE:
+			_space_held = event.pressed
+			_update_cursor()
+		if event.pressed and not event.echo:
+			if event.keycode == KEY_S and event.ctrl_pressed:
+				_save()
+			elif event.keycode >= KEY_1 and event.keycode < KEY_1 + Tool.size():
+				_select_tool(event.keycode - KEY_1)
+			return
 
-	if event is InputEventMouseMotion:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_MIDDLE or (event.button_index == MOUSE_BUTTON_LEFT and _space_held):
+			_panning = event.pressed
+			_update_cursor()
+			return
+		if event.pressed:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				_use_tool(_mouse_cell())
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				_erase_at(_mouse_cell())
+	elif event is InputEventMouseMotion:
+		if _panning:
+			camera.position -= event.relative / camera.zoom
+			return
 		var cell := _mouse_cell()
 		if cell == hover_cell:
 			return
@@ -141,11 +160,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			_erase_at(cell)
 		elif event.button_mask & MOUSE_BUTTON_MASK_LEFT and tool in [Tool.WALL, Tool.BORDER, Tool.ERASE]:
 			_use_tool(cell)
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_use_tool(_mouse_cell())
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_erase_at(_mouse_cell())
+
+
+func _update_cursor() -> void:
+	if _panning:
+		Input.set_default_cursor_shape(Input.CURSOR_DRAG)
+	elif _space_held:
+		Input.set_default_cursor_shape(Input.CURSOR_MOVE)
+	else:
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
 
 func _mouse_cell() -> Vector2i:
