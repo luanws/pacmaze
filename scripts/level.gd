@@ -20,6 +20,7 @@ void fragment() {
 	COLOR = vec4(color, 1.0);
 }
 """
+const WALL_SHADOW_OFFSET := Vector2(3, 4)
 
 var level_bonus := 10
 var move_sensitivity := 200
@@ -45,6 +46,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	_add_floor()
+	_add_wall_shadow()
 
 
 func _process(delta: float) -> void:
@@ -66,6 +68,16 @@ func _add_floor() -> void:
 	floor_rect.size = Vector2(grid_size - Vector2i.ONE) * tile_size()
 	add_child(floor_rect)
 	move_child(floor_rect, 0)
+
+
+## A dark copy of the walls, nudged down and to the right, so the blocks stand off the floor.
+func _add_wall_shadow() -> void:
+	var shadow: TileMapLayer = walls.duplicate()
+	shadow.name = "WallShadow"
+	shadow.modulate = Color(0, 0, 0, 0.5)
+	shadow.position += WALL_SHADOW_OFFSET
+	add_child(shadow)
+	move_child(shadow, walls.get_index())
 
 
 func tile_size() -> float:

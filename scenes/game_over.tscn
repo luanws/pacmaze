@@ -25,8 +25,8 @@ theme_override_constants/separation = 24
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
-theme_override_font_sizes/font_size = 72
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 80
 text = "Game Over"
 horizontal_alignment = 1
 

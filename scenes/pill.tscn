@@ -1,9 +1,16 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scripts/glow.gd" id="9_glow"]
 [ext_resource type="Script" path="res://scripts/frame_animator.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pill.png" id="2_texture"]
 
 [node name="Pill" type="Node2D"]
+
+[node name="Glow" type="Sprite2D" parent="."]
+script = ExtResource("9_glow")
+color = Color(1, 1, 1, 0.55)
+radius = 18.0
+pulse = 0.3
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_texture")

@@ -1,10 +1,11 @@
-[gd_resource type="Theme" load_steps=8 format=3]
+[gd_resource type="Theme" load_steps=10 format=3]
 
 [ext_resource type="FontFile" path="res://assets/fonts/Poppins-Medium.ttf" id="1_font"]
 [ext_resource type="FontFile" path="res://assets/fonts/Poppins-SemiBold.ttf" id="2_font_bold"]
+[ext_resource type="FontFile" path="res://assets/fonts/Righteous-Regular.ttf" id="3_font_title"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-bg_color = Color(0.07, 0.07, 0.09, 0.9)
+bg_color = Color(0.05, 0.07, 0.15, 0.92)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -14,6 +15,9 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
 content_margin_left = 18.0
 content_margin_top = 10.0
 content_margin_right = 18.0
@@ -30,6 +34,8 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+shadow_color = Color(0, 0.63, 0.9, 0.35)
+shadow_size = 12
 content_margin_left = 18.0
 content_margin_top = 10.0
 content_margin_right = 18.0
@@ -46,13 +52,15 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+shadow_color = Color(0, 0.63, 0.9, 0.25)
+shadow_size = 6
 content_margin_left = 18.0
 content_margin_top = 10.0
 content_margin_right = 18.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_focus"]
-bg_color = Color(0.07, 0.07, 0.09, 0.9)
+bg_color = Color(0.05, 0.07, 0.15, 0.92)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
@@ -62,13 +70,15 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+shadow_color = Color(0.95, 0.92, 0.13, 0.3)
+shadow_size = 12
 content_margin_left = 18.0
 content_margin_top = 10.0
 content_margin_right = 18.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_disabled"]
-bg_color = Color(0.07, 0.07, 0.09, 0.5)
+bg_color = Color(0.05, 0.06, 0.1, 0.5)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -82,6 +92,24 @@ content_margin_left = 18.0
 content_margin_top = 10.0
 content_margin_right = 18.0
 content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.03, 0.045, 0.1, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.63, 0.9, 0.7)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0.45, 0.8, 0.22)
+shadow_size = 18
+content_margin_left = 32.0
+content_margin_top = 24.0
+content_margin_right = 32.0
+content_margin_bottom = 24.0
 
 [resource]
 default_font = ExtResource("1_font")
@@ -98,3 +126,19 @@ Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 Button/styles/focus = SubResource("StyleBoxFlat_btn_focus")
 Button/styles/disabled = SubResource("StyleBoxFlat_btn_disabled")
+Label/colors/font_color = Color(0.9, 0.92, 0.97, 1)
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_panel")
+SectionLabel/base_type = &"Label"
+SectionLabel/colors/font_color = Color(0.35, 0.78, 1, 1)
+SectionLabel/font_sizes/font_size = 20
+SectionLabel/fonts/font = ExtResource("2_font_bold")
+TitleLabel/base_type = &"Label"
+TitleLabel/colors/font_color = Color(0.95, 0.92, 0.13, 1)
+TitleLabel/colors/font_outline_color = Color(0.02, 0.03, 0.08, 1)
+TitleLabel/colors/font_shadow_color = Color(0, 0.45, 0.8, 0.45)
+TitleLabel/constants/outline_size = 8
+TitleLabel/constants/shadow_offset_x = 0
+TitleLabel/constants/shadow_offset_y = 5
+TitleLabel/constants/shadow_outline_size = 14
+TitleLabel/font_sizes/font_size = 64
+TitleLabel/fonts/font = ExtResource("3_font_title")

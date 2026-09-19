@@ -1,6 +1,5 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="FontFile" path="res://assets/fonts/Righteous-Regular.ttf" id="0_title_font"]
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/menu_marquee.gd" id="2_marquee"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pill.png" id="3_pill"]
@@ -13,22 +12,6 @@
 [sub_resource type="AtlasTexture" id="AtlasTexture_dot"]
 atlas = ExtResource("3_pill")
 region = Rect2(0, 0, 30, 30)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.05, 0.05, 0.07, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0, 0.63, 0.9, 0.6)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-content_margin_left = 32.0
-content_margin_top = 26.0
-content_margin_right = 32.0
-content_margin_bottom = 26.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -112,21 +95,14 @@ vframes = 2
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_colors/font_shadow_color = Color(0, 0.15, 0.25, 0.6)
-theme_override_constants/shadow_offset_x = 4
-theme_override_constants/shadow_offset_y = 4
-theme_override_constants/outline_size = 8
-theme_override_fonts/font = ExtResource("0_title_font")
-theme_override_font_sizes/font_size = 64
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 72
 text = "Pacmaze"
 horizontal_alignment = 1
 
 [node name="ButtonsPanel" type="PanelContainer" parent="Center/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Buttons" type="VBoxContainer" parent="Center/VBox/ButtonsPanel"]
 custom_minimum_size = Vector2(320, 0)
