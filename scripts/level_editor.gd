@@ -134,6 +134,11 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# The editor needs a mouse, so a gamepad can at least leave it. Only the gamepad:
+	# Esc is too easy to hit by accident while editing.
+	if event is InputEventJoypadButton and event.is_action_pressed("ui_cancel"):
+		GameState.go_to_main_menu()
+		return
 	if event is InputEventKey:
 		if event.keycode == KEY_SPACE:
 			_space_held = event.pressed

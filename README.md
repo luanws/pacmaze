@@ -15,7 +15,7 @@ O jogador conduz o pac por um labirinto até a pílula branca. Depois que se esc
 | `F11` / `Alt+Enter` | | Alterna entre tela cheia e janela |
 | `M` | `Select` / `Back` | Liga e desliga o som e a música |
 
-Nos menus, o controle navega com o direcional, confirma com `A` e volta com `B`. Na versão web, o navegador só reconhece o controle depois que algum botão dele é apertado com a página aberta.
+Nos menus, o controle navega com o direcional, confirma com `A` e volta com `B`. O editor de fases precisa de mouse, mas o `B` do controle sai dele e volta ao menu principal. Na versão web, o navegador só reconhece o controle depois que algum botão dele é apertado com a página aberta.
 
 No Windows o jogo abre em tela cheia.
 
