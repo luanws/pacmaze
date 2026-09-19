@@ -335,6 +335,8 @@ func instantiate() -> Level:
 		var door: Door = DOOR_SCENE.instantiate()
 		door.position = cell_center(data.door)
 		door.color = data.color
+		# In a vertical wall the halves open up and down, into the wall.
+		door.slides_vertically = is_blocked(data.door + Vector2i.UP) or is_blocked(data.door + Vector2i.DOWN)
 		level.get_node("Doors").add_child(door)
 		var key: Key = KEY_SCENE.instantiate()
 		key.position = cell_center(data.key)
