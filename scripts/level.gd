@@ -36,7 +36,10 @@ func tile_size() -> float:
 
 
 func is_wall(cell: Vector2i) -> bool:
-	return walls.get_cell_source_id(cell) != -1
+	if walls.get_cell_source_id(cell) != -1:
+		return true
+	var door := _get_at(cell, $Doors) as Door
+	return door != null and not door.is_open
 
 
 func is_inside(cell: Vector2i) -> bool:
@@ -56,9 +59,23 @@ func get_ghosts() -> Array[Node]:
 
 
 func get_portal_at(cell: Vector2i) -> Portal:
-	for portal: Portal in $Portals.get_children():
-		if position_to_cell(to_local(portal.global_position)) == cell:
-			return portal
+	return _get_at(cell, $Portals) as Portal
+
+
+func get_key_at(cell: Vector2i) -> Key:
+	return _get_at(cell, $Keys) as Key
+
+
+## Puts every key back and closes the doors, for when the pac restarts.
+func reset_keys() -> void:
+	for key: Key in $Keys.get_children():
+		key.reset()
+
+
+func _get_at(cell: Vector2i, parent: Node) -> Node2D:
+	for child: Node2D in parent.get_children():
+		if position_to_cell(to_local(child.global_position)) == cell:
+			return child
 	return null
 
 

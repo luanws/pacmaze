@@ -1,7 +1,7 @@
 extends Node2D
 ## In-game level editor: paint the maze, place entities and save the level as a JSON file.
 
-enum Tool { WALL, BORDER, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL }
+enum Tool { WALL, BORDER, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL, KEY }
 
 const PANEL_WIDTH := 320.0
 const MARGIN := 24.0
@@ -15,16 +15,18 @@ const TOOL_NAMES := {
 	Tool.GHOST: "Fantasma",
 	Tool.ROUTE: "Rota",
 	Tool.PORTAL: "Portal",
+	Tool.KEY: "Chave",
 }
 const TOOL_HINTS := {
 	Tool.WALL: "Clique ou arraste para desenhar paredes.",
 	Tool.BORDER: "Blocos cinza de moldura. Funcionam como parede.",
-	Tool.ERASE: "Clique ou arraste para apagar paredes, fantasmas e portais.",
+	Tool.ERASE: "Clique ou arraste para apagar paredes, fantasmas, portais, chaves e portas.",
 	Tool.PLAYER: "Clique para definir onde o pac começa.",
 	Tool.PILL: "Clique para posicionar a pílula, o objetivo da fase.",
 	Tool.GHOST: "Clique numa célula para criar um fantasma, ou num fantasma para selecioná-lo. Depois use a ferramenta Rota.",
 	Tool.ROUTE: "Clique em células na mesma linha ou coluna do fim da rota (linhas destacadas) para adicionar trechos ao fantasma selecionado. A rota se repete em loop.",
 	Tool.PORTAL: "Clique em duas células livres para criar um par de portais.",
+	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. A porta bloqueia o pac até ele pegar a chave da mesma cor.",
 }
 const GHOST_COLOR_LABELS := ["Azul", "Verde", "Roxo", "Amarelo"]
 const GHOST_DRAW_COLORS := [
@@ -39,8 +41,9 @@ var path := ""
 var tool := Tool.WALL
 var preview: Level
 var selected_ghost := -1
-var pending_portal := Vector2i.ZERO
-var has_pending_portal := false
+## First cell of a portal pair or a key waiting for its second click.
+var pending_cell := Vector2i.ZERO
+var has_pending := false
 var hover_cell := Vector2i(-1, -1)
 var _status_serial := 0
 var _tool_buttons := {}
@@ -59,8 +62,8 @@ static var _web_file_owner: LevelData
 @onready var ghost_color: OptionButton = %GhostColor
 @onready var ghost_speed: SpinBox = %GhostSpeed
 @onready var route_info: Label = %RouteInfo
-@onready var portal_options: Control = %PortalOptions
-@onready var portal_color: ColorPickerButton = %PortalColor
+@onready var pair_options: Control = %PairOptions
+@onready var pair_color: ColorPickerButton = %PairColor
 @onready var name_edit: LineEdit = %NameEdit
 @onready var instructions_edit: TextEdit = %InstructionsEdit
 @onready var bonus_spin: SpinBox = %BonusSpin
@@ -84,7 +87,7 @@ func _ready() -> void:
 	%ClearRouteButton.pressed.connect(_clear_route)
 	ghost_color.item_selected.connect(_on_ghost_color_selected)
 	ghost_speed.value_changed.connect(_on_ghost_speed_changed)
-	portal_color.color_changed.connect(func(_c: Color) -> void: overlay.queue_redraw())
+	pair_color.color_changed.connect(func(_c: Color) -> void: overlay.queue_redraw())
 	name_edit.text_changed.connect(func(text: String) -> void: data.name = text)
 	instructions_edit.text_changed.connect(func() -> void: data.instructions = instructions_edit.text)
 	bonus_spin.value_changed.connect(func(value: float) -> void: data.level_bonus = int(value))
@@ -157,9 +160,8 @@ func _select_tool(new_tool: Tool) -> void:
 	_tool_buttons[tool].button_pressed = true
 	tool_hint.text = TOOL_HINTS[tool]
 	ghost_options.visible = tool in [Tool.GHOST, Tool.ROUTE]
-	portal_options.visible = tool == Tool.PORTAL
-	if tool != Tool.PORTAL:
-		has_pending_portal = false
+	pair_options.visible = tool in [Tool.PORTAL, Tool.KEY]
+	has_pending = false
 	overlay.queue_redraw()
 
 
@@ -187,13 +189,15 @@ func _use_tool(cell: Vector2i) -> void:
 			_add_route_step(cell)
 		Tool.PORTAL:
 			_place_portal(cell)
+		Tool.KEY:
+			_place_lock(cell)
 
 
 func _paint_wall(cell: Vector2i, type: LevelData.Cell) -> void:
 	# Walls can't cover the pac, the pill or a portal; dragging over them just skips the cell.
-	if cell == data.player or cell == data.pill or data.portal_at(cell) >= 0:
+	if cell == data.player or cell == data.pill or data.portal_at(cell) >= 0 or data.lock_at(cell) >= 0:
 		return
-	if has_pending_portal and cell == pending_portal:
+	if has_pending and cell == pending_cell:
 		return
 	data.set_cell(cell, type)
 	preview.walls.set_cell(cell, 0, Vector2i(0 if type == LevelData.Cell.BORDER else 1, 0))
@@ -216,8 +220,13 @@ func _erase_at(cell: Vector2i) -> void:
 		data.portals.remove_at(portal)
 		_rebuild_preview()
 		return
-	if has_pending_portal and cell == pending_portal:
-		has_pending_portal = false
+	var lock := data.lock_at(cell)
+	if lock >= 0:
+		data.locks.remove_at(lock)
+		_rebuild_preview()
+		return
+	if has_pending and cell == pending_cell:
+		has_pending = false
 		overlay.queue_redraw()
 		return
 	if data.get_cell(cell) != LevelData.Cell.EMPTY:
@@ -231,8 +240,8 @@ func _can_place_marker(cell: Vector2i, other: Vector2i) -> bool:
 		_show_status("Não dá para posicionar sobre uma parede.")
 	elif cell == other:
 		_show_status("O pac e a pílula precisam ficar em células diferentes.")
-	elif data.portal_at(cell) >= 0 or (has_pending_portal and cell == pending_portal):
-		_show_status("Não dá para posicionar sobre um portal.")
+	elif data.portal_at(cell) >= 0 or data.lock_at(cell) >= 0 or (has_pending and cell == pending_cell):
+		_show_status("Não dá para posicionar sobre um portal, uma chave ou uma porta.")
 	else:
 		return true
 	return false
@@ -287,30 +296,48 @@ func _clear_route() -> void:
 
 
 func _place_portal(cell: Vector2i) -> void:
-	if data.get_cell(cell) != LevelData.Cell.EMPTY:
-		_show_status("Portais precisam de uma célula sem parede.")
-		return
-	if data.portal_at(cell) >= 0:
-		_show_status("Já existe um portal nesta célula.")
-		return
-	if cell == data.player or cell == data.pill:
-		_show_status("Não dá para colocar um portal sobre o pac ou a pílula.")
-		return
-	if not has_pending_portal:
-		pending_portal = cell
-		has_pending_portal = true
-		_show_status("Agora clique onde fica o outro portal do par.")
-		overlay.queue_redraw()
-		return
-	if cell == pending_portal:
+	if not _pick_pair_cell(cell, "Agora clique onde fica o outro portal do par."):
 		return
 	var portal := LevelData.PortalData.new()
-	portal.a = pending_portal
+	portal.a = pending_cell
 	portal.b = cell
-	portal.color = portal_color.color
+	portal.color = pair_color.color
 	data.portals.append(portal)
-	has_pending_portal = false
 	_rebuild_preview()
+
+
+func _place_lock(cell: Vector2i) -> void:
+	if not _pick_pair_cell(cell, "Agora clique onde fica a porta que esta chave abre."):
+		return
+	var lock := LevelData.LockData.new()
+	lock.key = pending_cell
+	lock.door = cell
+	lock.color = pair_color.color
+	data.locks.append(lock)
+	_rebuild_preview()
+
+
+## Portals and keys are placed with two clicks. Returns true on the second one, with the first in pending_cell.
+func _pick_pair_cell(cell: Vector2i, next_hint: String) -> bool:
+	if data.get_cell(cell) != LevelData.Cell.EMPTY:
+		_show_status("Escolha uma célula sem parede.")
+		return false
+	if data.portal_at(cell) >= 0 or data.lock_at(cell) >= 0:
+		_show_status("Esta célula já tem um portal, uma chave ou uma porta.")
+		return false
+	if cell == data.player or cell == data.pill:
+		_show_status("Não dá para colocar sobre o pac ou a pílula.")
+		return false
+	if not has_pending:
+		pending_cell = cell
+		has_pending = true
+		_show_status(next_hint)
+		overlay.queue_redraw()
+		return false
+	if cell == pending_cell:
+		return false
+	has_pending = false
+	return true
 
 #endregion
 
@@ -358,7 +385,7 @@ func _set_data(new_data: LevelData, new_path: String) -> void:
 	path = new_path
 	GameState.editor_data = data
 	GameState.editor_path = path
-	has_pending_portal = false
+	has_pending = false
 	_select_ghost(-1)
 	name_edit.text = data.name
 	instructions_edit.text = data.instructions
@@ -402,8 +429,10 @@ func _draw_overlay() -> void:
 
 	for portal in data.portals:
 		overlay.draw_dashed_line(_center(portal.a), _center(portal.b), Color(portal.color, 0.5), 2.0, 8.0)
-	if has_pending_portal:
-		overlay.draw_rect(_cell_rect(pending_portal), portal_color.color, false, 3.0)
+	for lock in data.locks:
+		overlay.draw_dashed_line(_center(lock.key), _center(lock.door), Color(lock.color, 0.5), 2.0, 4.0)
+	if has_pending:
+		overlay.draw_rect(_cell_rect(pending_cell), pair_color.color, false, 3.0)
 
 	if tool == Tool.ROUTE and selected_ghost >= 0:
 		var end := data.ghosts[selected_ghost].path_end()

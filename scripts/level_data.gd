@@ -10,7 +10,8 @@ extends RefCounted
 ##   "map": ["+++", "+.+", ...],       # "+" border block, "#" wall, "." empty
 ##   "player": [x, y], "pill": [x, y],
 ##   "ghosts": [{"color": "blue", "cell": [x, y], "speed": 7.5, "path": [[dx, dy], ...]}],
-##   "portals": [{"color": "#ff0000", "a": [x, y], "b": [x, y]}]
+##   "portals": [{"color": "#ff0000", "a": [x, y], "b": [x, y]}],
+##   "locks": [{"color": "#00c8ff", "key": [x, y], "door": [x, y]}]   # the key opens the door
 ## }
 
 enum Cell { EMPTY, WALL, BORDER }
@@ -27,6 +28,8 @@ const DEFAULT_GHOST_SPEED := 7.5
 const LEVEL_SCENE := preload("res://scenes/level.tscn")
 const GHOST_SCENE := preload("res://scenes/ghost.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
+const KEY_SCENE := preload("res://scenes/key.tscn")
+const DOOR_SCENE := preload("res://scenes/door.tscn")
 
 
 class GhostData:
@@ -48,6 +51,12 @@ class PortalData:
 	var b := Vector2i.ZERO
 
 
+class LockData:
+	var color := Color.WHITE
+	var key := Vector2i.ZERO
+	var door := Vector2i.ZERO
+
+
 var name := "Nova fase"
 var instructions := ""
 var level_bonus := 10
@@ -59,6 +68,7 @@ var player := Vector2i.ZERO
 var pill := Vector2i.ZERO
 var ghosts: Array[GhostData] = []
 var portals: Array[PortalData] = []
+var locks: Array[LockData] = []
 
 
 ## An empty level surrounded by border blocks.
@@ -128,12 +138,23 @@ static func from_dict(d: Dictionary) -> LevelData:
 
 	for p: Dictionary in d.get("portals", []):
 		var portal := PortalData.new()
-		var color: String = p.get("color", "#ffffff")
-		portal.color = Color.html(color) if Color.html_is_valid(color) else Color.WHITE
+		portal.color = _to_color(p.get("color"))
 		portal.a = _to_cell(p.get("a"), Vector2i.ZERO)
 		portal.b = _to_cell(p.get("b"), Vector2i.ZERO)
 		data.portals.append(portal)
+
+	for l: Dictionary in d.get("locks", []):
+		var lock := LockData.new()
+		lock.color = _to_color(l.get("color"))
+		lock.key = _to_cell(l.get("key"), Vector2i.ZERO)
+		lock.door = _to_cell(l.get("door"), Vector2i.ZERO)
+		data.locks.append(lock)
 	return data
+
+
+static func _to_color(value: Variant) -> Color:
+	var text := str(value)
+	return Color.html(text) if Color.html_is_valid(text) else Color.WHITE
 
 
 static func _to_cell(value: Variant, fallback: Vector2i) -> Vector2i:
@@ -168,6 +189,13 @@ func to_dict() -> Dictionary:
 			"a": _from_cell(portal.a),
 			"b": _from_cell(portal.b),
 		})
+	var lock_list := []
+	for lock in locks:
+		lock_list.append({
+			"color": "#" + lock.color.to_html(false),
+			"key": _from_cell(lock.key),
+			"door": _from_cell(lock.door),
+		})
 	return {
 		"format": FORMAT,
 		"version": VERSION,
@@ -183,6 +211,7 @@ func to_dict() -> Dictionary:
 		"pill": _from_cell(pill),
 		"ghosts": ghost_list,
 		"portals": portal_list,
+		"locks": lock_list,
 	}
 
 
@@ -241,6 +270,14 @@ func portal_at(cell: Vector2i) -> int:
 	return -1
 
 
+## Index of the lock whose key or door is at the cell.
+func lock_at(cell: Vector2i) -> int:
+	for i in locks.size():
+		if locks[i].key == cell or locks[i].door == cell:
+			return i
+	return -1
+
+
 ## Returns an error message, or an empty string when the level can be played.
 func validate() -> String:
 	if is_blocked(player):
@@ -252,6 +289,11 @@ func validate() -> String:
 	for portal in portals:
 		if is_blocked(portal.a) or is_blocked(portal.b):
 			return "Há um portal sobre uma parede ou fora do mapa."
+	for lock in locks:
+		if is_blocked(lock.key) or is_blocked(lock.door):
+			return "Há uma chave ou porta sobre uma parede ou fora do mapa."
+		if player in [lock.key, lock.door] or pill in [lock.key, lock.door]:
+			return "Há uma chave ou porta sobre o pac ou a pílula."
 	return ""
 
 
@@ -288,6 +330,17 @@ func instantiate() -> Level:
 		var b := _create_portal(data.b, data.color, portal_parent)
 		a.partner = b
 		b.partner = a
+
+	for data in locks:
+		var door: Door = DOOR_SCENE.instantiate()
+		door.position = cell_center(data.door)
+		door.color = data.color
+		level.get_node("Doors").add_child(door)
+		var key: Key = KEY_SCENE.instantiate()
+		key.position = cell_center(data.key)
+		key.modulate = data.color
+		key.door = door
+		level.get_node("Keys").add_child(key)
 	return level
 
 

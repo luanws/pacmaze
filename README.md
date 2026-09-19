@@ -42,13 +42,19 @@ O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_d
 	"ghosts": [
 		{"color":"blue","cell":[4,2],"speed":7.5,"path":[[-2,0],[2,0]]}
 	],
-	"portals": []
+	"portals": [],
+	"locks": [
+		{"color":"#00c8ff","key":[1,1],"door":[5,2]}
+	]
 }
 ```
 
+- `portals`: pares de portais. Entrar em um leva ao outro.
+- `locks`: pares de chave e porta. A porta (`door`) bloqueia o pac como uma parede até ele passar pela chave (`key`) da mesma cor. Quando o pac morre ou volta ao início, as chaves e as portas voltam ao lugar.
+
 ### Editor de fases
 
-No menu principal, entre em **Editor de fases**. Lá você desenha paredes, posiciona o pac, a pílula, os fantasmas (com as rotas) e os portais, salva e testa a fase sem sair do jogo. **Salvar** e **Abrir** usam a janela de arquivos do sistema operacional, então a fase pode ficar em qualquer pasta. As fases salvas na pasta padrão (`user://levels/`) aparecem em **Selecionar fase → Fases criadas**.
+No menu principal, entre em **Editor de fases**. Lá você desenha paredes, posiciona o pac, a pílula, os fantasmas (com as rotas), os portais e as chaves com suas portas, salva e testa a fase sem sair do jogo. **Salvar** e **Abrir** usam a janela de arquivos do sistema operacional, então a fase pode ficar em qualquer pasta. As fases salvas na pasta padrão (`user://levels/`) aparecem em **Selecionar fase → Fases criadas**.
 
 ## Rodando o projeto
 
@@ -117,3 +123,7 @@ Diferenças na versão web:
   - No Chrome e no Edge você escolhe a pasta e o nome do arquivo. Os próximos **Salvar** gravam no mesmo arquivo sem perguntar de novo.
   - Nos outros navegadores, **Salvar** baixa o `.json` para a pasta de downloads.
   - Uma cópia de cada fase salva também fica no armazenamento do navegador. Assim ela aparece em **Selecionar fase → Fases criadas**.
+
+## Créditos
+
+- As imagens da chave e do cadeado (`assets/sprites/key.png` e `assets/sprites/lock.png`) são dos pacotes *Game Icons* e *Game Icons Expansion*, da [Kenney](https://kenney.nl), publicados sob a licença [CC0](https://creativecommons.org/publicdomain/zero/1.0/).

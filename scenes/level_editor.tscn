@@ -185,16 +185,16 @@ layout_mode = 2
 label_settings = SubResource("LabelSettings_hint")
 autowrap_mode = 3
 
-[node name="PortalOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content"]
+[node name="PairOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/PortalOptions"]
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/PairOptions"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Cor do par"
 
-[node name="PortalColor" type="ColorPickerButton" parent="UI/Panel/Scroll/Content/PortalOptions"]
+[node name="PairColor" type="ColorPickerButton" parent="UI/Panel/Scroll/Content/PairOptions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 28)
 layout_mode = 2
@@ -277,7 +277,7 @@ custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 text = "Botão esquerdo: usar a ferramenta
 Botão direito: apagar
-Teclas 1–8: trocar de ferramenta
+Teclas 1–9: trocar de ferramenta
 Ctrl+S: salvar"
 label_settings = SubResource("LabelSettings_hint")
 autowrap_mode = 3

@@ -62,6 +62,7 @@ func reset() -> void:
 	cell = start_cell
 	position = level.cell_to_position(cell)
 	inside_portal = level.get_portal_at(cell)
+	level.reset_keys()
 
 
 func _die() -> void:
@@ -108,6 +109,9 @@ func _advance(distance: float) -> void:
 
 
 func _on_cell_entered() -> void:
+	var key := level.get_key_at(cell)
+	if key and not key.collected:
+		key.collect()
 	var portal := level.get_portal_at(cell)
 	if portal == null:
 		inside_portal = null
