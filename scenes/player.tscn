@@ -11,4 +11,4 @@ script = ExtResource("1_script")
 texture_filter = 2
 scale = Vector2(0.1171875, 0.1171875)
 texture = ExtResource("2_texture")
-hframes = 8
+hframes = 7

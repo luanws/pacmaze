@@ -1,6 +1,31 @@
-[gd_scene format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/menu_marquee.gd" id="2_marquee"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pill.png" id="3_pill"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pacman.png" id="4_pacman"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ghost_blue.png" id="5_ghost_blue"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ghost_purple.png" id="6_ghost_purple"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dot"]
+atlas = ExtResource("3_pill")
+region = Rect2(0, 0, 30, 30)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.05, 0.07, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.63, 0.9, 0.6)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 32.0
+content_margin_top = 26.0
+content_margin_right = 32.0
+content_margin_bottom = 26.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -10,6 +35,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="DotBackground" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.05)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_dot")
+stretch_mode = 1
+texture_repeat = 2
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -21,45 +59,91 @@ grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 28
+
+[node name="Marquee" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(520, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+clip_contents = true
+script = ExtResource("2_marquee")
+
+[node name="Pac" type="Sprite2D" parent="Center/VBox/Marquee"]
+unique_name_in_owner = true
+position = Vector2(0, 32)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("4_pacman")
+hframes = 7
+
+[node name="Ghost1" type="Sprite2D" parent="Center/VBox/Marquee"]
+unique_name_in_owner = true
+position = Vector2(-46, 32)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("5_ghost_blue")
+hframes = 4
+vframes = 2
+
+[node name="Ghost2" type="Sprite2D" parent="Center/VBox/Marquee"]
+unique_name_in_owner = true
+position = Vector2(-92, 32)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("6_ghost_purple")
+hframes = 4
+vframes = 2
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0.15, 0.25, 0.6)
+theme_override_constants/shadow_offset_x = 4
+theme_override_constants/shadow_offset_y = 4
+theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 80
 text = "Pacmaze"
 horizontal_alignment = 1
 
-[node name="Instructions" type="Label" parent="Center/VBox"]
-custom_minimum_size = Vector2(720, 0)
-layout_mode = 2
-text = "1. Use as setas para iniciar o jogo e movimentar o pac.
-2. O movimento na direção selecionada só para quando o pac atinge um obstáculo.
-3. O pac deve atravessar o labirinto evitando os fantasmas e chegar ao portal luminoso."
-autowrap_mode = 3
-
-[node name="Buttons" type="VBoxContainer" parent="Center/VBox"]
-custom_minimum_size = Vector2(320, 0)
+[node name="ButtonsPanel" type="PanelContainer" parent="Center/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Buttons" type="VBoxContainer" parent="Center/VBox/ButtonsPanel"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="Center/VBox/Buttons"]
+[node name="PlayButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Jogar"
 
-[node name="SelectButton" type="Button" parent="Center/VBox/Buttons"]
+[node name="SelectButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Selecionar fase"
 
-[node name="EditorButton" type="Button" parent="Center/VBox/Buttons"]
+[node name="EditorButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Editor de fases"
 
-[node name="QuitButton" type="Button" parent="Center/VBox/Buttons"]
+[node name="InstructionsButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Instruções"
+
+[node name="QuitButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Sair"
+
+[node name="InstructionsDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Instruções"
+initial_position = 1
+size = Vector2i(400, 200)
+ok_button_text = "OK"
+dialog_text = "1. Use as setas para iniciar o jogo e movimentar o pac.
+2. O movimento na direção selecionada só para quando o pac atinge um obstáculo.
+3. O pac deve atravessar o labirinto evitando os fantasmas e chegar ao portal luminoso."

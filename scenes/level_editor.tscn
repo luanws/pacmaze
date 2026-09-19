@@ -194,12 +194,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Cor do par"
 
-[node name="PairColor" type="ColorPickerButton" parent="UI/Panel/Scroll/Content/PairOptions"]
+[node name="PairColor" type="OptionButton" parent="UI/Panel/Scroll/Content/PairOptions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 28)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
-color = Color(1, 0, 0, 1)
-edit_alpha = false
 
 [node name="Separator2" type="HSeparator" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2

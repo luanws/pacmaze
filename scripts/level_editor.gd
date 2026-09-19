@@ -35,6 +35,18 @@ const GHOST_DRAW_COLORS := [
 	Color(0.75, 0.35, 0.9),
 	Color(0.95, 0.85, 0.1),
 ]
+## Fixed palette for portals and keys/doors, so saved levels always use visually distinct colors.
+const PAIR_COLOR_LABELS := ["Azul", "Verde", "Vermelho", "Amarelo", "Laranja", "Roxo", "Ciano", "Magenta"]
+const PAIR_COLORS := [
+	Color(0.15, 0.4, 0.95),
+	Color(0.15, 0.8, 0.25),
+	Color(0.9, 0.15, 0.15),
+	Color(0.95, 0.85, 0.1),
+	Color(0.95, 0.55, 0.05),
+	Color(0.55, 0.15, 0.85),
+	Color(0.05, 0.85, 0.9),
+	Color(0.9, 0.1, 0.75),
+]
 
 var data: LevelData
 var path := ""
@@ -45,6 +57,7 @@ var selected_ghost := -1
 var pending_cell := Vector2i.ZERO
 var has_pending := false
 var hover_cell := Vector2i(-1, -1)
+var pair_color_index := 0
 var _status_serial := 0
 var _tool_buttons := {}
 ## Only set on the web build, where levels are saved and opened through the browser.
@@ -63,7 +76,7 @@ static var _web_file_owner: LevelData
 @onready var ghost_speed: SpinBox = %GhostSpeed
 @onready var route_info: Label = %RouteInfo
 @onready var pair_options: Control = %PairOptions
-@onready var pair_color: ColorPickerButton = %PairColor
+@onready var pair_color: OptionButton = %PairColor
 @onready var name_edit: LineEdit = %NameEdit
 @onready var instructions_edit: TextEdit = %InstructionsEdit
 @onready var bonus_spin: SpinBox = %BonusSpin
@@ -74,6 +87,7 @@ static var _web_file_owner: LevelData
 
 func _ready() -> void:
 	_build_tool_buttons()
+	_build_pair_color_options()
 	for label in GHOST_COLOR_LABELS:
 		ghost_color.add_item(label)
 
@@ -87,7 +101,7 @@ func _ready() -> void:
 	%ClearRouteButton.pressed.connect(_clear_route)
 	ghost_color.item_selected.connect(_on_ghost_color_selected)
 	ghost_speed.value_changed.connect(_on_ghost_speed_changed)
-	pair_color.color_changed.connect(func(_c: Color) -> void: overlay.queue_redraw())
+	pair_color.item_selected.connect(_select_pair_color)
 	name_edit.text_changed.connect(func(text: String) -> void: data.name = text)
 	instructions_edit.text_changed.connect(func() -> void: data.instructions = instructions_edit.text)
 	bonus_spin.value_changed.connect(func(value: float) -> void: data.level_bonus = int(value))
@@ -153,6 +167,24 @@ func _build_tool_buttons() -> void:
 		button.pressed.connect(_select_tool.bind(t))
 		tool_grid.add_child(button)
 		_tool_buttons[t] = button
+
+
+func _build_pair_color_options() -> void:
+	for i in PAIR_COLORS.size():
+		pair_color.add_icon_item(_color_swatch(PAIR_COLORS[i]), PAIR_COLOR_LABELS[i])
+	pair_color.select(pair_color_index)
+
+
+## A small solid-color square used as the icon for each palette entry in the combo box.
+func _color_swatch(color: Color) -> ImageTexture:
+	var image := Image.create(16, 16, false, Image.FORMAT_RGB8)
+	image.fill(color)
+	return ImageTexture.create_from_image(image)
+
+
+func _select_pair_color(index: int) -> void:
+	pair_color_index = index
+	overlay.queue_redraw()
 
 
 func _select_tool(new_tool: Tool) -> void:
@@ -301,7 +333,7 @@ func _place_portal(cell: Vector2i) -> void:
 	var portal := LevelData.PortalData.new()
 	portal.a = pending_cell
 	portal.b = cell
-	portal.color = pair_color.color
+	portal.color = PAIR_COLORS[pair_color_index]
 	data.portals.append(portal)
 	_rebuild_preview()
 
@@ -312,7 +344,7 @@ func _place_lock(cell: Vector2i) -> void:
 	var lock := LevelData.LockData.new()
 	lock.key = pending_cell
 	lock.door = cell
-	lock.color = pair_color.color
+	lock.color = PAIR_COLORS[pair_color_index]
 	data.locks.append(lock)
 	_rebuild_preview()
 
@@ -432,7 +464,7 @@ func _draw_overlay() -> void:
 	for lock in data.locks:
 		overlay.draw_dashed_line(_center(lock.key), _center(lock.door), Color(lock.color, 0.5), 2.0, 4.0)
 	if has_pending:
-		overlay.draw_rect(_cell_rect(pending_cell), pair_color.color, false, 3.0)
+		overlay.draw_rect(_cell_rect(pending_cell), PAIR_COLORS[pair_color_index], false, 3.0)
 
 	if tool == Tool.ROUTE and selected_ghost >= 0:
 		var end := data.ghosts[selected_ghost].path_end()

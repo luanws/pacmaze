@@ -50,9 +50,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_animation_time += delta
-	# The sheet already contains a full closed->open->closed mouth cycle.
-	sprite.frame = int(_animation_time * ANIMATION_FPS) % sprite.hframes
+	# Clamped so a hitch (e.g. the first Sfx.play call decoding audio) can't
+	# skip several mouth frames at once and make the animation look erratic.
+	_animation_time += minf(delta, 1.0 / ANIMATION_FPS)
+	# Ping-pong through the mouth frames.
+	var cycle := sprite.hframes * 2 - 2
+	var index := int(_animation_time * ANIMATION_FPS) % cycle
+	sprite.frame = index if index < sprite.hframes else cycle - index
 
 
 func reset() -> void:
