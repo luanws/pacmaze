@@ -1,6 +1,7 @@
 extends Control
 
-@onready var play_button: Button = %PlayButton
+@onready var continue_button: Button = %ContinueButton
+@onready var new_game_button: Button = %NewGameButton
 @onready var select_button: Button = %SelectButton
 @onready var editor_button: Button = %EditorButton
 @onready var instructions_button: Button = %InstructionsButton
@@ -10,7 +11,10 @@ extends Control
 
 func _ready() -> void:
 	Sfx.play_song(0)
-	play_button.pressed.connect(GameState.start_run)
+	# Continue picks up at the furthest unlocked level; hidden until there is progress to resume.
+	continue_button.pressed.connect(func() -> void: GameState.start_run(GameState.unlocked_level))
+	continue_button.visible = GameState.unlocked_level > 1
+	new_game_button.pressed.connect(GameState.start_run)
 	select_button.pressed.connect(GameState.go_to_level_select)
 	editor_button.pressed.connect(GameState.open_editor)
 	instructions_button.pressed.connect(instructions_dialog.popup_centered)
@@ -20,4 +24,4 @@ func _ready() -> void:
 			instructions_button.grab_focus())
 	quit_button.pressed.connect(get_tree().quit)
 	quit_button.visible = not OS.has_feature("web")
-	play_button.grab_focus()
+	(continue_button if continue_button.visible else new_game_button).grab_focus()

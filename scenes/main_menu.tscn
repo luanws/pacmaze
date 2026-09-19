@@ -133,10 +133,15 @@ custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
+[node name="ContinueButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Jogar"
+text = "Continuar"
+
+[node name="NewGameButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Novo jogo"
 
 [node name="SelectButton" type="Button" parent="Center/VBox/ButtonsPanel/Buttons"]
 unique_name_in_owner = true
