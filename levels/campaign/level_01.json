@@ -2,7 +2,7 @@
 	"format": "pacmaze-level",
 	"version": 1,
 	"name": "Fase 1",
-	"instructions": "Instruções:\n- As setas direcionais movimentam o personagem\n- O botão “D” reinicia a fase\n- Evite os fantasmas\n- Coma a pílula branca para avançar para a próxima fase",
+	"instructions": "Instruções:\n- As setas direcionais movimentam o personagem\n- O botão “Espaço” reinicia a fase\n- Evite os fantasmas\n- Coma a pílula branca para avançar para a próxima fase",
 	"scoring": {"level_bonus":10,"move_sensitivity":200,"time_sensitivity":100},
 	"map": [
 		"+++++++++++++++++++++++++++++++++++++++++++",
