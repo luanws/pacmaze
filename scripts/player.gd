@@ -9,6 +9,7 @@ const SUBSTEP := 0.25 ## Max tiles travelled between collision checks.
 const GHOST_HIT_DISTANCE := 0.85 ## In tiles.
 const PILL_HIT_DISTANCE := 0.8 ## In tiles.
 const ANIMATION_FPS := 12.0
+const SWIPE_MIN_DISTANCE := 30.0 ## In screen pixels.
 const DIRECTIONS := {
 	"move_left": Vector2i.LEFT,
 	"move_right": Vector2i.RIGHT,
@@ -24,6 +25,8 @@ var cell: Vector2i
 var direction := Vector2i.ZERO
 var inside_portal: Portal
 var _animation_time := 0.0
+var _swipe_start: Variant = null ## Screen position where the current touch began, until it becomes a swipe.
+var _swipe := Vector2i.ZERO ## Direction swiped since the last physics frame.
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -47,6 +50,24 @@ func _physics_process(delta: float) -> void:
 		_advance(speed * delta)
 	elif _touches_ghost():
 		_die()
+	# Like a key press, a swipe only counts on the frame it happens.
+	_swipe = Vector2i.ZERO
+
+
+## Touch screens: one swipe per touch, in the dominant axis of the drag.
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		_swipe_start = event.position if event.pressed and event.index == 0 else null
+	elif event is InputEventScreenDrag and event.index == 0 and _swipe_start != null:
+		var drag: Vector2 = event.position - _swipe_start
+		if drag.length() < SWIPE_MIN_DISTANCE:
+			return
+		if absf(drag.x) > absf(drag.y):
+			_swipe = Vector2i.RIGHT if drag.x > 0 else Vector2i.LEFT
+		else:
+			_swipe = Vector2i.DOWN if drag.y > 0 else Vector2i.UP
+		_swipe_start = null
+		get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:
@@ -74,17 +95,19 @@ func _die() -> void:
 
 
 func _read_input() -> void:
+	var chosen := _swipe
 	for action: String in DIRECTIONS:
 		if Input.is_action_just_pressed(action):
-			var chosen: Vector2i = DIRECTIONS[action]
-			sprite.rotation = Vector2(chosen).angle()
-			level.register_move()
-			moved.emit()
-			# Pushing against a door with its key opens it, but the pac stays put until the next command.
-			if not level.try_open_door(cell + chosen):
-				direction = chosen
-				Sfx.play("move", 0.05)
-			return
+			chosen = DIRECTIONS[action]
+	if chosen == Vector2i.ZERO:
+		return
+	sprite.rotation = Vector2(chosen).angle()
+	level.register_move()
+	moved.emit()
+	# Pushing against a door with its key opens it, but the pac stays put until the next command.
+	if not level.try_open_door(cell + chosen):
+		direction = chosen
+		Sfx.play("move", 0.05)
 
 
 func _advance(distance: float) -> void:

@@ -97,7 +97,7 @@ layout_mode = 2
 [node name="StartHint" type="Label" parent="HUD/Instructions/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
-text = "Pressione uma seta para começar"
+text = "Pressione uma seta ou deslize para começar"
 horizontal_alignment = 1
 
 [node name="CompletePanel" type="CenterContainer" parent="HUD"]
