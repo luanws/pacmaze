@@ -37,14 +37,14 @@ func _ready() -> void:
 		_players.append(player)
 	_streams = {
 		"move": _build(_tone(Wave.SINE, 480, 300, 0.08, 0.16)),
-		"bump": _build(_mix(_tone(Wave.TRIANGLE, 160, 50, 0.1, 0.5), _tone(Wave.NOISE, 1200, 300, 0.05, 0.15))),
-		"key": _build(_notes(Wave.SQUARE, [988, 1319, 1976], 0.06, 0.18)),
-		"door": _build(_tone(Wave.NOISE, 3000, 3000, 0.03, 0.25) + _tone(Wave.TRIANGLE, 180, 720, 0.3, 0.45)),
-		"portal": _build(_tone(Wave.SINE, 300, 1400, 0.14, 0.35) + _tone(Wave.SINE, 1400, 500, 0.14, 0.3)),
-		"death": _build(_mix(_tone(Wave.SQUARE, 900, 90, 0.55, 0.2), _tone(Wave.NOISE, 900, 100, 0.55, 0.08))),
-		"complete": _build(_notes(Wave.SQUARE, [523, 659, 784], 0.08, 0.18) + _tone(Wave.SQUARE, 1047, 1047, 0.3, 0.18)),
-		"victory": _build(_notes(Wave.SQUARE, [392, 523, 659, 784, 659, 784], 0.11, 0.18) + _tone(Wave.SQUARE, 1047, 1047, 0.5, 0.18)),
-		"click": _build(_tone(Wave.SQUARE, 700, 900, 0.035, 0.12)),
+		"bump": _build(_mix(_tone(Wave.TRIANGLE, 150, 50, 0.1, 0.45), _tone(Wave.NOISE, 600, 200, 0.04, 0.05))),
+		"key": _build(_notes(Wave.TRIANGLE, [784, 988, 1175], 0.07, 0.28)),
+		"door": _build(_tone(Wave.NOISE, 1500, 1500, 0.025, 0.08) + _tone(Wave.TRIANGLE, 200, 500, 0.3, 0.35)),
+		"portal": _build(_tone(Wave.SINE, 300, 900, 0.14, 0.28) + _tone(Wave.SINE, 900, 400, 0.14, 0.24)),
+		"death": _build(_tone(Wave.TRIANGLE, 700, 100, 0.6, 0.4)),
+		"complete": _build(_notes(Wave.TRIANGLE, [523, 659, 784], 0.08, 0.3) + _tone(Wave.TRIANGLE, 1047, 1047, 0.35, 0.3)),
+		"victory": _build(_notes(Wave.TRIANGLE, [392, 523, 659, 784, 659, 784], 0.11, 0.3) + _tone(Wave.TRIANGLE, 1047, 1047, 0.55, 0.3)),
+		"click": _build(_tone(Wave.SINE, 600, 500, 0.04, 0.15)),
 	}
 	get_tree().node_added.connect(_on_node_added)
 	_music_player = AudioStreamPlayer.new()
@@ -77,7 +77,7 @@ func _on_node_added(node: Node) -> void:
 		node.pressed.connect(play.bind("click"))
 
 
-## Chiptune loop: square lead, triangle bass jumping octaves, kick on the beats and noise hi-hats.
+## Chiptune loop: triangle lead, triangle bass jumping octaves, kick on the beats and noise hi-hats.
 func _compose_music() -> PackedFloat32Array:
 	var bar_length := int(STEP * 16 * MIX_RATE)
 	var song := PackedFloat32Array()
@@ -87,7 +87,7 @@ func _compose_music() -> PackedFloat32Array:
 		var offset := 0
 		for note: Array in MELODY[bar]:
 			var hz := _midi_to_hz(note[0])
-			_add(song, _tone(Wave.SQUARE, hz, hz, note[1] * STEP, 0.07), start + int(offset * STEP * MIX_RATE))
+			_add(song, _tone(Wave.TRIANGLE, hz, hz, note[1] * STEP, 0.12), start + int(offset * STEP * MIX_RATE))
 			offset += note[1]
 		for eighth in 8:
 			var at := start + int(eighth * 2 * STEP * MIX_RATE)
@@ -96,7 +96,7 @@ func _compose_music() -> PackedFloat32Array:
 			if eighth % 4 == 0:
 				_add(song, _tone(Wave.TRIANGLE, 150, 40, 0.12, 0.3), at)
 			else:
-				_add(song, _tone(Wave.NOISE, 8000, 8000, 0.03, 0.04), at)
+				_add(song, _tone(Wave.NOISE, 6000, 6000, 0.025, 0.025), at)
 	return song
 
 
