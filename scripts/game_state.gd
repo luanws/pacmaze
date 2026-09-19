@@ -33,9 +33,25 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_fullscreen"):
-		var fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		toggle_fullscreen()
 		get_viewport().set_input_as_handled()
+
+
+func is_fullscreen() -> bool:
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+
+
+func toggle_fullscreen() -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if is_fullscreen() else DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+
+## Keeps a fullscreen toggle button's text in sync, including when the browser leaves fullscreen on Esc.
+func bind_fullscreen_button(button: Button) -> void:
+	var refresh := func() -> void: button.text = "Sair da tela cheia" if is_fullscreen() else "Tela cheia"
+	refresh.call()
+	button.pressed.connect(toggle_fullscreen)
+	button.get_tree().root.size_changed.connect(refresh)
+	button.tree_exiting.connect(func() -> void: button.get_tree().root.size_changed.disconnect(refresh))
 
 
 func campaign_size() -> int:

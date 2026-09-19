@@ -5,6 +5,7 @@ extends Control
 @onready var select_button: Button = %SelectButton
 @onready var editor_button: Button = %EditorButton
 @onready var instructions_button: Button = %InstructionsButton
+@onready var fullscreen_button: Button = %FullscreenButton
 @onready var quit_button: Button = %QuitButton
 @onready var instructions_dialog: AcceptDialog = %InstructionsDialog
 
@@ -22,6 +23,7 @@ func _ready() -> void:
 	instructions_dialog.visibility_changed.connect(func() -> void:
 		if not instructions_dialog.visible:
 			instructions_button.grab_focus())
+	GameState.bind_fullscreen_button(fullscreen_button)
 	quit_button.pressed.connect(get_tree().quit)
 	quit_button.visible = not OS.has_feature("web")
 	(continue_button if continue_button.visible else new_game_button).grab_focus()

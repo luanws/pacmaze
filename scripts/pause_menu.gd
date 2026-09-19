@@ -3,6 +3,7 @@ extends CanvasLayer
 
 @onready var resume_button: Button = %ResumeButton
 @onready var restart_button: Button = %RestartButton
+@onready var fullscreen_button: Button = %FullscreenButton
 @onready var menu_button: Button = %MenuButton
 
 
@@ -10,6 +11,7 @@ func _ready() -> void:
 	hide()
 	resume_button.pressed.connect(close)
 	restart_button.pressed.connect(GameState.restart_level)
+	GameState.bind_fullscreen_button(fullscreen_button)
 	menu_button.pressed.connect(GameState.leave_level)
 	if GameState.mode == GameState.Mode.EDITOR_TEST:
 		menu_button.text = "Voltar ao editor"

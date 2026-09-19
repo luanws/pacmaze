@@ -163,6 +163,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Reiniciar fase"
 
+[node name="FullscreenButton" type="Button" parent="PauseMenu/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tela cheia"
+
 [node name="MenuButton" type="Button" parent="PauseMenu/Center/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
