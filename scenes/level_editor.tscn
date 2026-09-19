@@ -143,7 +143,7 @@ text = "FERRAMENTAS"
 unique_name_in_owner = true
 texture_filter = 2
 layout_mode = 2
-theme_override_constants/h_separation = 6
+theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 6
 columns = 4
 
