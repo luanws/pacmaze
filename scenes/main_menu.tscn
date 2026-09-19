@@ -1,11 +1,14 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
+[ext_resource type="FontFile" path="res://assets/fonts/Righteous-Regular.ttf" id="0_title_font"]
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/menu_marquee.gd" id="2_marquee"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pill.png" id="3_pill"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pacman.png" id="4_pacman"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ghost_blue.png" id="5_ghost_blue"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ghost_purple.png" id="6_ghost_purple"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ghost_green.png" id="7_ghost_green"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ghost_yellow.png" id="8_ghost_yellow"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_dot"]
 atlas = ExtResource("3_pill")
@@ -91,6 +94,22 @@ texture = ExtResource("6_ghost_purple")
 hframes = 4
 vframes = 2
 
+[node name="Ghost3" type="Sprite2D" parent="Center/VBox/Marquee"]
+unique_name_in_owner = true
+position = Vector2(-138, 32)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("7_ghost_green")
+hframes = 4
+vframes = 2
+
+[node name="Ghost4" type="Sprite2D" parent="Center/VBox/Marquee"]
+unique_name_in_owner = true
+position = Vector2(-184, 32)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("8_ghost_yellow")
+hframes = 4
+vframes = 2
+
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
@@ -98,8 +117,9 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0.15, 0.25, 0.6)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
-theme_override_constants/outline_size = 10
-theme_override_font_sizes/font_size = 80
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("0_title_font")
+theme_override_font_sizes/font_size = 64
 text = "Pacmaze"
 horizontal_alignment = 1
 

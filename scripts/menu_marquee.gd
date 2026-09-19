@@ -7,7 +7,7 @@ const WALK_FPS := 6.0
 const GHOST_GAP := 46.0 ## Pixels between the pac and each ghost behind it.
 
 @onready var pac: Sprite2D = %Pac
-@onready var ghosts: Array[Sprite2D] = [%Ghost1, %Ghost2]
+@onready var ghosts: Array[Sprite2D] = [%Ghost1, %Ghost2, %Ghost3, %Ghost4]
 
 var _time := 0.0
 

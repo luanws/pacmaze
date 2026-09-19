@@ -24,9 +24,9 @@ Sfx="*res://scripts/sfx.gd"
 
 window/size/viewport_width=1320
 window/size/viewport_height=870
-window/size/mode.windows=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/size/mode.windows=3
 
 [gui]
 
