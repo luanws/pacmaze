@@ -82,6 +82,7 @@ func get_held_keys() -> Array[Key]:
 
 func collect_key(key: Key) -> void:
 	key.collect()
+	Sfx.play("key")
 	keys_changed.emit()
 
 
@@ -94,6 +95,7 @@ func try_open_door(cell: Vector2i) -> bool:
 		if key.door == door:
 			key.used = true
 			door.set_open(true)
+			Sfx.play("door")
 			keys_changed.emit()
 			return true
 	return false

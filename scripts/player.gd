@@ -66,6 +66,7 @@ func reset() -> void:
 
 
 func _die() -> void:
+	Sfx.play("death")
 	reset()
 	died.emit()
 
@@ -80,6 +81,7 @@ func _read_input() -> void:
 			# Pushing against a door with its key opens it, but the pac stays put until the next command.
 			if not level.try_open_door(cell + chosen):
 				direction = chosen
+				Sfx.play("move", 0.1)
 			return
 
 
@@ -90,6 +92,7 @@ func _advance(distance: float) -> void:
 		# Leaving the map counts as hitting a wall, even without border blocks.
 		if level.is_wall(next) or not level.is_inside(next):
 			direction = Vector2i.ZERO
+			Sfx.play("bump", 0.1)
 			return
 		var target := level.cell_to_position(next)
 		var step := minf(distance, SUBSTEP) * tile
@@ -121,6 +124,7 @@ func _on_cell_entered() -> void:
 	elif portal != inside_portal:
 		# The portals swap places, so the one we entered ends up under us.
 		portal.teleport()
+		Sfx.play("portal")
 		inside_portal = portal
 		cell = level.position_to_cell(level.to_local(portal.global_position))
 		position = level.cell_to_position(cell)

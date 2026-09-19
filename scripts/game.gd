@@ -81,5 +81,6 @@ func _on_level_completed() -> void:
 	var gained := level.compute_score()
 	complete_label.text = "Fase concluída!\n+%d pontos" % gained
 	complete_panel.show()
+	Sfx.play("complete")
 	await get_tree().create_timer(COMPLETE_DELAY).timeout
 	GameState.complete_level(gained)

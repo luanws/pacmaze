@@ -8,3 +8,4 @@ func _ready() -> void:
 	score_label.text = "Pontuação: %d" % GameState.score
 	continue_button.pressed.connect(GameState.go_to_main_menu)
 	continue_button.grab_focus()
+	Sfx.play("victory")
