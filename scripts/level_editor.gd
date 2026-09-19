@@ -1,14 +1,13 @@
 extends Node2D
 ## In-game level editor: paint the maze, place entities and save the level as a JSON file.
 
-enum Tool { WALL, BORDER, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL, KEY }
+enum Tool { WALL, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL, KEY }
 
 const PANEL_WIDTH := 320.0
 const MARGIN := 24.0
 const STATUS_DURATION := 4.0
 const TOOL_NAMES := {
 	Tool.WALL: "Parede",
-	Tool.BORDER: "Borda",
 	Tool.ERASE: "Apagar",
 	Tool.PLAYER: "Pac",
 	Tool.PILL: "Pílula",
@@ -19,7 +18,6 @@ const TOOL_NAMES := {
 }
 const TOOL_HINTS := {
 	Tool.WALL: "Clique ou arraste para desenhar paredes.",
-	Tool.BORDER: "Blocos cinza de moldura. Funcionam como parede.",
 	Tool.ERASE: "Clique ou arraste para apagar paredes, fantasmas, portais, chaves e portas.",
 	Tool.PLAYER: "Clique para definir onde o pac começa.",
 	Tool.PILL: "Clique para posicionar a pílula, o objetivo da fase.",
@@ -158,7 +156,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Dragging paints/erases along the way.
 		if event.button_mask & MOUSE_BUTTON_MASK_RIGHT:
 			_erase_at(cell)
-		elif event.button_mask & MOUSE_BUTTON_MASK_LEFT and tool in [Tool.WALL, Tool.BORDER, Tool.ERASE]:
+		elif event.button_mask & MOUSE_BUTTON_MASK_LEFT and tool in [Tool.WALL, Tool.ERASE]:
 			_use_tool(cell)
 
 
@@ -225,9 +223,7 @@ func _use_tool(cell: Vector2i) -> void:
 		return
 	match tool:
 		Tool.WALL:
-			_paint_wall(cell, LevelData.Cell.WALL)
-		Tool.BORDER:
-			_paint_wall(cell, LevelData.Cell.BORDER)
+			_paint_wall(cell)
 		Tool.ERASE:
 			_erase_at(cell)
 		Tool.PLAYER:
@@ -248,14 +244,17 @@ func _use_tool(cell: Vector2i) -> void:
 			_place_lock(cell)
 
 
-func _paint_wall(cell: Vector2i, type: LevelData.Cell) -> void:
-	# Walls can't cover the pac, the pill or a portal; dragging over them just skips the cell.
+func _paint_wall(cell: Vector2i) -> void:
+	# Border cells are fixed and can't be overwritten. Walls also can't cover the pac,
+	# the pill or a portal; dragging over any of them just skips the cell.
+	if data.get_cell(cell) == LevelData.Cell.BORDER:
+		return
 	if cell == data.player or cell == data.pill or data.portal_at(cell) >= 0 or data.lock_at(cell) >= 0:
 		return
 	if has_pending and cell == pending_cell:
 		return
-	data.set_cell(cell, type)
-	preview.walls.set_cell(cell, 0, Vector2i(0 if type == LevelData.Cell.BORDER else 1, 0))
+	data.set_cell(cell, LevelData.Cell.WALL)
+	preview.walls.set_cell(cell, 0, Vector2i(1, 0))
 
 
 func _erase_at(cell: Vector2i) -> void:
@@ -284,7 +283,7 @@ func _erase_at(cell: Vector2i) -> void:
 		has_pending = false
 		overlay.queue_redraw()
 		return
-	if data.get_cell(cell) != LevelData.Cell.EMPTY:
+	if data.get_cell(cell) == LevelData.Cell.WALL:
 		data.set_cell(cell, LevelData.Cell.EMPTY)
 		preview.walls.erase_cell(cell)
 
