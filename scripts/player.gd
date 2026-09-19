@@ -51,10 +51,8 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_animation_time += delta
-	# Ping-pong through the mouth frames.
-	var cycle := sprite.hframes * 2 - 2
-	var index := int(_animation_time * ANIMATION_FPS) % cycle
-	sprite.frame = index if index < sprite.hframes else cycle - index
+	# The sheet already contains a full closed->open->closed mouth cycle.
+	sprite.frame = int(_animation_time * ANIMATION_FPS) % sprite.hframes
 
 
 func reset() -> void:
