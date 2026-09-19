@@ -1,26 +1,26 @@
 """Insere/reordena uma fase da campanha, renumerando os arquivos automaticamente.
 
 Abre um seletor de arquivo para escolher uma fase (.json), pergunta qual
-numero de fase ela deve ocupar e renomeia os arquivos em levels/campaign/
-para que a numeracao fique sequencial (level_01.json, level_02.json, ...),
+número de fase ela deve ocupar e renomeia os arquivos em levels/campaign/
+para que a numeração fique sequencial (level_01.json, level_02.json, ...),
 sem lacunas.
 
-- Se o arquivo escolhido ja estiver em levels/campaign, ele e movido para a
-  nova posicao (as demais fases se deslocam para abrir espaco).
-- Se o arquivo escolhido estiver fora de levels/campaign, uma copia dele e
-  inserida na posicao escolhida (o arquivo original nao e alterado).
-- A nova fase e inserida imediatamente antes da primeira fase existente cujo
-  numero atual (no nome do arquivo) seja >= ao numero informado. Depois
-  disso, TODAS as fases sao renumeradas em sequencia (1, 2, 3, ...), o que
+- Se o arquivo escolhido já estiver em levels/campaign, ele é movido para a
+  nova posição (as demais fases se deslocam para abrir espaço).
+- Se o arquivo escolhido estiver fora de levels/campaign, uma cópia dele é
+  inserida na posição escolhida (o arquivo original não é alterado).
+- A nova fase é inserida imediatamente antes da primeira fase existente cujo
+  número atual (no nome do arquivo) seja >= ao número informado. Depois
+  disso, TODAS as fases são renumeradas em sequência (1, 2, 3, ...), o que
   elimina lacunas automaticamente. Por exemplo, com as fases 1, 3, 4, 5
-  (falta a 2) e pedindo a posicao 4: a nova entra antes da antiga "4",
-  e a renumeracao final e 1, 2 (antiga 3), 3 (nova), 4 (antiga 4),
-  5 (antiga 5) — a antiga 4 e a antiga 5 acabam preservando os numeros
-  4 e 5 porque o buraco em 2 foi preenchido pela antiga 3.
-- O campo "name" dentro do JSON (ex.: "Fase 3") e atualizado junto, mas so
-  quando ja segue esse padrao — nomes customizados sao preservados.
-- Se nenhum arquivo for selecionado no seletor (dialogo cancelado), o script
-  apenas remove lacunas existentes na numeracao da campanha, sem inserir
+  (falta a 2) e pedindo a posição 4: a nova entra antes da antiga "4",
+  e a renumeração final é 1, 2 (antiga 3), 3 (nova), 4 (antiga 4),
+  5 (antiga 5) — a antiga 4 e a antiga 5 acabam preservando os números
+  4 e 5 porque a lacuna em 2 foi preenchida pela antiga 3.
+- O campo "name" dentro do JSON (ex.: "Fase 3") é atualizado junto, mas só
+  quando já segue esse padrão — nomes customizados são preservados.
+- Se nenhum arquivo for selecionado no seletor (diálogo cancelado), o script
+  apenas remove lacunas existentes na numeração da campanha, sem inserir
   nada de novo.
 
 Uso: python tools/renumber_campaign_level.py
@@ -43,7 +43,7 @@ FASE_NAME_PATTERN = re.compile(r"^Fase \d+$")
 
 
 def list_campaign_levels() -> list[Path]:
-    """Fases existentes, ordenadas pelo numero no nome do arquivo (lacunas incluídas)."""
+    """Fases existentes, ordenadas pelo número no nome do arquivo (lacunas incluídas)."""
     entries = []
     for path in CAMPAIGN_DIR.glob("*.json"):
         match = LEVEL_FILE_PATTERN.match(path.name)
@@ -76,7 +76,7 @@ def update_internal_name(path: Path, position: int) -> None:
 
 
 def split_matched(paths: list[Path]) -> tuple[list[tuple[int, Path]], list[Path]]:
-    """Separa arquivos que seguem level_NN.json (com seu numero) dos demais."""
+    """Separa arquivos que seguem level_NN.json (com seu número) dos demais."""
     matched: list[tuple[int, Path]] = []
     unmatched: list[Path] = []
     for path in paths:
@@ -92,10 +92,10 @@ def split_matched(paths: list[Path]) -> tuple[list[tuple[int, Path]], list[Path]
 def apply_new_order(new_order: list[Path], new_path: Path | None) -> list[tuple[str, str]]:
     """Renomeia os arquivos de new_order para level_01.json, level_02.json, ...
 
-    new_path (se houver) e um arquivo que ainda nao esta no nome final: sera
-    copiado (se vier de fora de CAMPAIGN_DIR) ou movido (se ja estiver la).
-    Os demais arquivos de new_order ja existem em CAMPAIGN_DIR e sao apenas
-    renomeados. Retorna a lista de mudancas (nome antigo -> nome novo).
+    new_path (se houver) é um arquivo que ainda não está no nome final: será
+    copiado (se vier de fora de CAMPAIGN_DIR) ou movido (se já estiver lá).
+    Os demais arquivos de new_order já existem em CAMPAIGN_DIR e são apenas
+    renomeados. Retorna a lista de mudanças (nome antigo -> nome novo).
     """
     total = len(new_order)
     digits = max(2, len(str(total)))
@@ -145,7 +145,7 @@ def insert_level(chosen_path: Path) -> None:
         f"Existem {len(existing)} fase(s) na campanha.\n"
         f"Qual número de fase este arquivo deve ocupar (1 a {default_position})?\n\n"
         "Se esse número estiver ocupado, a fase nova entra no lugar dela e as "
-        "demais se deslocam; lacunas na numeração são preenchidos automaticamente.",
+        "demais se deslocam; lacunas na numeração são preenchidas automaticamente.",
         initialvalue=default_position,
         minvalue=1,
         maxvalue=default_position,
