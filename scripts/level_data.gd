@@ -7,7 +7,7 @@ extends RefCounted
 ##   "format": "pacmaze-level", "version": 1,
 ##   "name": "...", "instructions": "...",
 ##   "scoring": {"level_bonus": 10, "move_sensitivity": 200, "time_sensitivity": 100},
-##   "map": ["+++", "+.+", ...],       # "+" border block, "#" wall, "." empty
+##   "map": ["+++", "+.+", ...],       # "+" border block, "." empty, wall: "#" or another WALL_CHARS style
 ##   "player": [x, y], "pill": [x, y],
 ##   "ghosts": [{"color": "blue", "cell": [x, y], "speed": 7.5, "path": [[dx, dy], ...]}],
 ##   "portals": [{"color": "#ff0000", "a": [x, y], "b": [x, y]}],
@@ -20,8 +20,11 @@ const FORMAT := "pacmaze-level"
 const VERSION := 1
 const TILE_SIZE := 30
 const DEFAULT_SIZE := Vector2i(43, 27)
-const CELL_CHARS := {Cell.EMPTY: ".", Cell.WALL: "#", Cell.BORDER: "+"}
-const CHAR_CELLS := {".": Cell.EMPTY, "#": Cell.WALL, "+": Cell.BORDER}
+const CELL_CHARS := {Cell.EMPTY: ".", Cell.BORDER: "+"}
+const CHAR_CELLS := {".": Cell.EMPTY, "+": Cell.BORDER}
+## Map character of each wall style, in the order of row 1 of the walls atlas: classic,
+## neon, red brick, gem, metal, grass, crate, ice, lava, circuit, candy.
+const WALL_CHARS := "#abcdefghij"
 const GHOST_COLOR_NAMES := ["blue", "green", "purple", "yellow"]
 const DEFAULT_GHOST_SPEED := 7.5
 
@@ -64,6 +67,7 @@ var move_sensitivity := 200
 var time_sensitivity := 100
 var size := DEFAULT_SIZE
 var cells := PackedByteArray()
+var wall_styles := PackedByteArray() ## Style of each wall cell, an index into WALL_CHARS.
 var player := Vector2i.ZERO
 var pill := Vector2i.ZERO
 var ghosts: Array[GhostData] = []
@@ -76,6 +80,7 @@ static func create_empty(level_size := DEFAULT_SIZE) -> LevelData:
 	var data := LevelData.new()
 	data.size = level_size
 	data.cells.resize(level_size.x * level_size.y)
+	data.wall_styles.resize(data.cells.size())
 	for y in level_size.y:
 		for x in level_size.x:
 			if x == 0 or y == 0 or x == level_size.x - 1 or y == level_size.y - 1:
@@ -120,10 +125,15 @@ static func from_dict(d: Dictionary) -> LevelData:
 	data.time_sensitivity = int(scoring.get("time_sensitivity", data.time_sensitivity))
 	data.size = Vector2i(width, rows.size())
 	data.cells.resize(width * rows.size())
+	data.wall_styles.resize(data.cells.size())
 	for y in rows.size():
 		var row: String = rows[y]
 		for x in row.length():
-			data.set_cell(Vector2i(x, y), CHAR_CELLS.get(row[x], Cell.EMPTY))
+			var style := WALL_CHARS.find(row[x])
+			if style >= 0:
+				data.set_wall(Vector2i(x, y), style)
+			else:
+				data.set_cell(Vector2i(x, y), CHAR_CELLS.get(row[x], Cell.EMPTY))
 	data.player = _to_cell(d.get("player"), Vector2i(1, data.size.y - 2))
 	data.pill = _to_cell(d.get("pill"), Vector2i(data.size.x - 2, 1))
 
@@ -172,7 +182,11 @@ func to_dict() -> Dictionary:
 	for y in size.y:
 		var row := ""
 		for x in size.x:
-			row += CELL_CHARS[get_cell(Vector2i(x, y))]
+			var cell := Vector2i(x, y)
+			if get_cell(cell) == Cell.WALL:
+				row += WALL_CHARS[get_wall_style(cell)]
+			else:
+				row += CELL_CHARS[get_cell(cell)]
 		rows.append(row)
 	var ghost_list := []
 	for ghost in ghosts:
@@ -247,26 +261,32 @@ func get_cell(cell: Vector2i) -> int:
 	return cells[cell.y * size.x + cell.x] if is_inside(cell) else Cell.EMPTY
 
 
-## Tile of the walls atlas for a non-empty cell. Border bricks run across
-## neighbouring border cells, so a cell closes them with a half brick only on
-## the sides where the border ends: 0 none, 2 left, 3 right, 4 both.
-func _wall_atlas_coords(cell: Vector2i) -> Vector2i:
+## Tile of the walls atlas for a non-empty cell. Walls take their style's tile
+## from row 1. Border bricks run across neighbouring border cells, so a border
+## cell (row 0) closes them with a half brick only on the sides where the border
+## ends: 0 none, 1 left, 2 right, 3 both.
+func wall_atlas_coords(cell: Vector2i) -> Vector2i:
 	if get_cell(cell) != Cell.BORDER:
-		return Vector2i(1, 0)
-	var cap_left := get_cell(cell + Vector2i.LEFT) != Cell.BORDER
-	var cap_right := get_cell(cell + Vector2i.RIGHT) != Cell.BORDER
-	if cap_left and cap_right:
-		return Vector2i(4, 0)
-	if cap_left:
-		return Vector2i(2, 0)
-	if cap_right:
-		return Vector2i(3, 0)
-	return Vector2i(0, 0)
+		return Vector2i(get_wall_style(cell), 1)
+	var cap_left := int(get_cell(cell + Vector2i.LEFT) != Cell.BORDER)
+	var cap_right := int(get_cell(cell + Vector2i.RIGHT) != Cell.BORDER)
+	return Vector2i(cap_left + cap_right * 2, 0)
 
 
 func set_cell(cell: Vector2i, value: int) -> void:
 	if is_inside(cell):
 		cells[cell.y * size.x + cell.x] = value
+
+
+func get_wall_style(cell: Vector2i) -> int:
+	return wall_styles[cell.y * size.x + cell.x] if is_inside(cell) else 0
+
+
+## Makes the cell a wall of the given style (an index into WALL_CHARS).
+func set_wall(cell: Vector2i, style: int) -> void:
+	if is_inside(cell):
+		set_cell(cell, Cell.WALL)
+		wall_styles[cell.y * size.x + cell.x] = style
 
 
 func is_blocked(cell: Vector2i) -> bool:
@@ -327,7 +347,7 @@ func instantiate() -> Level:
 		for x in size.x:
 			var cell := get_cell(Vector2i(x, y))
 			if cell != Cell.EMPTY:
-				walls.set_cell(Vector2i(x, y), 0, _wall_atlas_coords(Vector2i(x, y)))
+				walls.set_cell(Vector2i(x, y), 0, wall_atlas_coords(Vector2i(x, y)))
 
 	level.get_node("Player").position = cell_center(player)
 	level.get_node("Pill").position = cell_center(pill)

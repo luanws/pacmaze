@@ -199,6 +199,20 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 
+[node name="WallOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/WallOptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Estilo"
+
+[node name="WallStyle" type="OptionButton" parent="UI/Panel/Scroll/Content/WallOptions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+
 [node name="Separator2" type="HSeparator" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
 

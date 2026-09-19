@@ -17,7 +17,7 @@ const TOOL_NAMES := {
 	Tool.KEY: "Chave",
 }
 const TOOL_HINTS := {
-	Tool.WALL: "Clique ou arraste para desenhar paredes.",
+	Tool.WALL: "Clique ou arraste para desenhar paredes no estilo escolhido. Pintar sobre uma parede troca o estilo dela.",
 	Tool.ERASE: "Clique ou arraste para apagar paredes, fantasmas, portais, chaves e portas.",
 	Tool.PLAYER: "Clique para definir onde o pac começa.",
 	Tool.PILL: "Clique para posicionar a pílula, o objetivo da fase.",
@@ -26,6 +26,12 @@ const TOOL_HINTS := {
 	Tool.PORTAL: "Clique em duas células livres para criar um par de portais.",
 	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. Com a chave da mesma cor, o pac abre a porta empurrando contra ela.",
 }
+const WALLS_TEXTURE := preload("res://assets/sprites/walls.png")
+## Same order as LevelData.WALL_CHARS.
+const WALL_STYLE_LABELS := [
+	"Clássica", "Neon", "Tijolo vermelho", "Gema", "Metal", "Grama",
+	"Caixote", "Gelo", "Lava", "Circuito", "Doce",
+]
 const GHOST_COLOR_LABELS := ["Azul", "Verde", "Roxo", "Amarelo"]
 const GHOST_DRAW_COLORS := [
 	Color(0.1, 0.75, 0.85),
@@ -56,6 +62,7 @@ var pending_cell := Vector2i.ZERO
 var has_pending := false
 var hover_cell := Vector2i(-1, -1)
 var pair_color_index := 0
+var wall_style_index := 0 ## Style painted by the wall tool, an index into LevelData.WALL_CHARS.
 var _space_held := false
 var _panning := false
 var _status_serial := 0
@@ -76,6 +83,8 @@ static var _web_file_owner: LevelData
 @onready var ghost_speed: SpinBox = %GhostSpeed
 @onready var route_info: Label = %RouteInfo
 @onready var pair_options: Control = %PairOptions
+@onready var wall_options: Control = %WallOptions
+@onready var wall_style: OptionButton = %WallStyle
 @onready var pair_color: OptionButton = %PairColor
 @onready var name_edit: LineEdit = %NameEdit
 @onready var instructions_edit: TextEdit = %InstructionsEdit
@@ -88,6 +97,7 @@ static var _web_file_owner: LevelData
 func _ready() -> void:
 	_build_tool_buttons()
 	_build_pair_color_options()
+	_build_wall_style_options()
 	for label in GHOST_COLOR_LABELS:
 		ghost_color.add_item(label)
 
@@ -103,6 +113,7 @@ func _ready() -> void:
 	ghost_speed.value_changed.connect(_on_ghost_speed_changed)
 	pair_color.item_selected.connect(_select_pair_color)
 	name_edit.text_changed.connect(func(text: String) -> void: data.name = text)
+	wall_style.item_selected.connect(_select_wall_style)
 	instructions_edit.text_changed.connect(func() -> void: data.instructions = instructions_edit.text)
 	bonus_spin.value_changed.connect(func(value: float) -> void: data.level_bonus = int(value))
 	moves_spin.value_changed.connect(func(value: float) -> void: data.move_sensitivity = int(value))
@@ -214,6 +225,7 @@ func _select_tool(new_tool: Tool) -> void:
 	tool_hint.text = TOOL_HINTS[tool]
 	ghost_options.visible = tool in [Tool.GHOST, Tool.ROUTE]
 	pair_options.visible = tool in [Tool.PORTAL, Tool.KEY]
+	wall_options.visible = tool == Tool.WALL
 	has_pending = false
 	overlay.queue_redraw()
 
@@ -253,8 +265,8 @@ func _paint_wall(cell: Vector2i) -> void:
 		return
 	if has_pending and cell == pending_cell:
 		return
-	data.set_cell(cell, LevelData.Cell.WALL)
-	preview.walls.set_cell(cell, 0, Vector2i(1, 0))
+	data.set_wall(cell, wall_style_index)
+	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
 
 
 func _erase_at(cell: Vector2i) -> void:
@@ -449,6 +461,21 @@ func _set_data(new_data: LevelData, new_path: String) -> void:
 	_update_file_label()
 	_rebuild_preview()
 	_fit_camera()
+
+
+## Each option shows its wall tile, taken from the walls atlas.
+func _build_wall_style_options() -> void:
+	var tile := float(LevelData.TILE_SIZE)
+	for i in WALL_STYLE_LABELS.size():
+		var icon := AtlasTexture.new()
+		icon.atlas = WALLS_TEXTURE
+		icon.region = Rect2(i * tile, tile, tile, tile)
+		wall_style.add_icon_item(icon, WALL_STYLE_LABELS[i])
+	wall_style.select(wall_style_index)
+
+
+func _select_wall_style(index: int) -> void:
+	wall_style_index = index
 
 
 func _rebuild_preview() -> void:
