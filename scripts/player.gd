@@ -81,7 +81,7 @@ func _read_input() -> void:
 			# Pushing against a door with its key opens it, but the pac stays put until the next command.
 			if not level.try_open_door(cell + chosen):
 				direction = chosen
-				Sfx.play("move", 0.1)
+				Sfx.play("move", 0.05)
 			return
 
 

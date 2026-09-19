@@ -36,7 +36,7 @@ func _ready() -> void:
 		add_child(player)
 		_players.append(player)
 	_streams = {
-		"move": _build(_tone(Wave.SQUARE, 260, 520, 0.06, 0.12)),
+		"move": _build(_tone(Wave.SINE, 480, 300, 0.08, 0.16)),
 		"bump": _build(_mix(_tone(Wave.TRIANGLE, 160, 50, 0.1, 0.5), _tone(Wave.NOISE, 1200, 300, 0.05, 0.15))),
 		"key": _build(_notes(Wave.SQUARE, [988, 1319, 1976], 0.06, 0.18)),
 		"door": _build(_tone(Wave.NOISE, 3000, 3000, 0.03, 0.25) + _tone(Wave.TRIANGLE, 180, 720, 0.3, 0.45)),
