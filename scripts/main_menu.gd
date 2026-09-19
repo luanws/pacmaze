@@ -9,6 +9,7 @@ extends Control
 
 
 func _ready() -> void:
+	Sfx.play_song(0)
 	play_button.pressed.connect(GameState.start_run)
 	select_button.pressed.connect(GameState.go_to_level_select)
 	editor_button.pressed.connect(GameState.open_editor)

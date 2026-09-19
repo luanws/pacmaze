@@ -247,6 +247,23 @@ func get_cell(cell: Vector2i) -> int:
 	return cells[cell.y * size.x + cell.x] if is_inside(cell) else Cell.EMPTY
 
 
+## Tile of the walls atlas for a non-empty cell. Border bricks run across
+## neighbouring border cells, so a cell closes them with a half brick only on
+## the sides where the border ends: 0 none, 2 left, 3 right, 4 both.
+func _wall_atlas_coords(cell: Vector2i) -> Vector2i:
+	if get_cell(cell) != Cell.BORDER:
+		return Vector2i(1, 0)
+	var cap_left := get_cell(cell + Vector2i.LEFT) != Cell.BORDER
+	var cap_right := get_cell(cell + Vector2i.RIGHT) != Cell.BORDER
+	if cap_left and cap_right:
+		return Vector2i(4, 0)
+	if cap_left:
+		return Vector2i(2, 0)
+	if cap_right:
+		return Vector2i(3, 0)
+	return Vector2i(0, 0)
+
+
 func set_cell(cell: Vector2i, value: int) -> void:
 	if is_inside(cell):
 		cells[cell.y * size.x + cell.x] = value
@@ -310,7 +327,7 @@ func instantiate() -> Level:
 		for x in size.x:
 			var cell := get_cell(Vector2i(x, y))
 			if cell != Cell.EMPTY:
-				walls.set_cell(Vector2i(x, y), 0, Vector2i(0 if cell == Cell.BORDER else 1, 0))
+				walls.set_cell(Vector2i(x, y), 0, _wall_atlas_coords(Vector2i(x, y)))
 
 	level.get_node("Player").position = cell_center(player)
 	level.get_node("Pill").position = cell_center(pill)

@@ -7,6 +7,9 @@ texture = ExtResource("1_7snjw")
 texture_region_size = Vector2i(30, 30)
 0:0/0 = 0
 1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
 
 [resource]
 tile_size = Vector2i(30, 30)

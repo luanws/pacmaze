@@ -10,6 +10,7 @@ const GAME_OVER_SCENE := "res://scenes/game_over.tscn"
 const MAIN_MENU_SCENE := "res://scenes/main_menu.tscn"
 const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
 const EDITOR_SCENE := "res://scenes/level_editor.tscn"
+const PROGRESS_FILE := "user://progress.cfg"
 
 var mode := Mode.CAMPAIGN
 var score := 0
@@ -19,12 +20,15 @@ var custom_path := ""
 var editor_data: LevelData
 var editor_path := ""
 var campaign_files := PackedStringArray()
+## Highest campaign level the player may start (1-based); saved between sessions.
+var unlocked_level := 1
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	DirAccess.make_dir_recursive_absolute(USER_LEVELS_DIR)
 	campaign_files = _list_levels(CAMPAIGN_DIR)
+	_load_progress()
 
 
 func _input(event: InputEvent) -> void:
@@ -36,6 +40,10 @@ func _input(event: InputEvent) -> void:
 
 func campaign_size() -> int:
 	return campaign_files.size()
+
+
+func is_level_unlocked(level: int) -> bool:
+	return level <= unlocked_level
 
 
 func list_user_levels() -> PackedStringArray:
@@ -91,6 +99,7 @@ func complete_level(level_score: int) -> void:
 	match mode:
 		Mode.CAMPAIGN:
 			score += level_score
+			_unlock_level(current_level + 1)
 			if current_level < campaign_size():
 				current_level += 1
 				_change_scene(GAME_SCENE)
@@ -126,6 +135,22 @@ func go_to_main_menu() -> void:
 
 func go_to_level_select() -> void:
 	_change_scene(LEVEL_SELECT_SCENE)
+
+
+func _unlock_level(level: int) -> void:
+	level = mini(level, campaign_size())
+	if level <= unlocked_level:
+		return
+	unlocked_level = level
+	var config := ConfigFile.new()
+	config.set_value("campaign", "unlocked_level", unlocked_level)
+	config.save(PROGRESS_FILE)
+
+
+func _load_progress() -> void:
+	var config := ConfigFile.new()
+	if config.load(PROGRESS_FILE) == OK:
+		unlocked_level = clampi(int(config.get_value("campaign", "unlocked_level", 1)), 1, maxi(campaign_size(), 1))
 
 
 func _list_levels(dir: String) -> PackedStringArray:
