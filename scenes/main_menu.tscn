@@ -164,6 +164,6 @@ title = "Instruções"
 initial_position = 1
 size = Vector2i(400, 200)
 ok_button_text = "OK"
-dialog_text = "1. Use as setas para iniciar o jogo e movimentar o pac.
+dialog_text = "1. Use as setas (ou o direcional do controle) para iniciar o jogo e movimentar o pac.
 2. O movimento na direção selecionada só para quando o pac atinge um obstáculo.
 3. O pac deve atravessar o labirinto evitando os fantasmas e chegar ao portal luminoso."

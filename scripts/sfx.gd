@@ -378,9 +378,8 @@ func _ready() -> void:
 	_compose_next_in_playlist()
 
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	var key := event as InputEventKey
-	if key.pressed and not key.echo and key.keycode == KEY_M:
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_mute"):
 		AudioServer.set_bus_mute(0, not AudioServer.is_bus_mute(0))
 		get_viewport().set_input_as_handled()
 
