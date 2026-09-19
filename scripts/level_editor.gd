@@ -98,8 +98,8 @@ func _ready() -> void:
 	_build_tool_buttons()
 	_build_pair_color_options()
 	_build_wall_style_options()
-	for label in GHOST_COLOR_LABELS:
-		ghost_color.add_item(label)
+	for i in GHOST_COLOR_LABELS.size():
+		ghost_color.add_icon_item(_ghost_icon(i), GHOST_COLOR_LABELS[i])
 
 	%NewButton.pressed.connect(_confirm_new)
 	%OpenButton.pressed.connect(_open_dialog.bind(FileDialog.FILE_MODE_OPEN_FILE))
@@ -195,15 +195,76 @@ func _build_tool_buttons() -> void:
 	var group := ButtonGroup.new()
 	for t: Tool in TOOL_NAMES:
 		var button := Button.new()
+		button.theme_type_variation = &"ToolButton"
 		button.text = TOOL_NAMES[t]
+		button.icon = _tool_icon(t)
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		button.toggle_mode = true
 		button.button_group = group
 		button.focus_mode = Control.FOCUS_NONE
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.tooltip_text = "%s (%d)" % [TOOL_NAMES[t], t + 1]
 		button.pressed.connect(_select_tool.bind(t))
+		# Keyboard shortcut in the corner.
+		var shortcut := Label.new()
+		shortcut.theme_type_variation = &"ToolKey"
+		shortcut.text = str(t + 1)
+		shortcut.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		shortcut.position += Vector2(-5, 1)
+		button.add_child(shortcut)
 		tool_grid.add_child(button)
 		_tool_buttons[t] = button
+
+
+## Tool icons come from the game sprites; erase and route have no sprite, so they are drawn here.
+func _tool_icon(t: Tool) -> Texture2D:
+	match t:
+		Tool.WALL:
+			return _atlas_icon(WALLS_TEXTURE, Rect2(0, LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE))
+		Tool.PLAYER:
+			return _atlas_icon(preload("res://assets/sprites/pacman.png"), Rect2(242, 0, 242, 256))
+		Tool.PILL:
+			return _atlas_icon(preload("res://assets/sprites/pill.png"), Rect2(0, 0, 30, 30))
+		Tool.GHOST:
+			return _ghost_icon(0)
+		Tool.PORTAL:
+			return _atlas_icon(preload("res://assets/sprites/portal.png"), Rect2(0, 0, 30, 30))
+		Tool.KEY:
+			return preload("res://assets/sprites/key.png")
+	var image := Image.create(30, 30, false, Image.FORMAT_RGBA8)
+	if t == Tool.ERASE:
+		var color := Color(0.95, 0.4, 0.4)
+		for i in range(7, 23):
+			image.fill_rect(Rect2i(i - 1, i - 1, 3, 3), color)
+			image.fill_rect(Rect2i(28 - i, i - 1, 3, 3), color)
+	else:
+		# An L-shaped route with a dot at each end.
+		var color := Color(0.1, 0.75, 0.85)
+		for x in range(6, 24, 4):
+			image.fill_rect(Rect2i(x, 21, 3, 3), color)
+		for y in range(7, 22, 4):
+			image.fill_rect(Rect2i(21, y, 3, 3), color)
+		image.fill_rect(Rect2i(4, 19, 7, 7), Color.WHITE)
+		image.fill_rect(Rect2i(19, 4, 7, 7), color)
+	return ImageTexture.create_from_image(image)
+
+
+func _atlas_icon(texture: Texture2D, region: Rect2) -> AtlasTexture:
+	var icon := AtlasTexture.new()
+	icon.atlas = texture
+	icon.region = region
+	return icon
+
+
+func _ghost_icon(color: int) -> AtlasTexture:
+	var textures := [
+		preload("res://assets/sprites/ghost_blue.png"),
+		preload("res://assets/sprites/ghost_green.png"),
+		preload("res://assets/sprites/ghost_purple.png"),
+		preload("res://assets/sprites/ghost_yellow.png"),
+	]
+	return _atlas_icon(textures[color], Rect2(0, 0, 30, 30))
 
 
 func _build_pair_color_options() -> void:

@@ -1,26 +1,18 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/level_editor.gd" id="1_editor"]
-
-[sub_resource type="Theme" id="Theme_panel"]
-default_font_size = 11
+[ext_resource type="Theme" path="res://assets/editor_theme.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.03, 0.045, 0.1, 0.96)
 border_width_left = 2
-border_color = Color(0, 0.63, 0.9, 1)
-content_margin_left = 12.0
-content_margin_top = 12.0
-content_margin_right = 12.0
-content_margin_bottom = 12.0
-
-[sub_resource type="LabelSettings" id="LabelSettings_section"]
-font_size = 13
-font_color = Color(0.95, 0.92, 0.13, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_hint"]
-font_size = 10
-font_color = Color(0.7, 0.7, 0.7, 1)
+border_color = Color(0, 0.63, 0.9, 0.9)
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 8.0
+content_margin_bottom = 14.0
+shadow_color = Color(0, 0.63, 0.9, 0.12)
+shadow_size = 18
 
 [node name="LevelEditor" type="Node2D"]
 script = ExtResource("1_editor")
@@ -43,7 +35,7 @@ anchor_bottom = 1.0
 offset_left = -320.0
 grow_horizontal = 0
 grow_vertical = 2
-theme = SubResource("Theme_panel")
+theme = ExtResource("2_theme")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Scroll" type="ScrollContainer" parent="UI/Panel"]
@@ -53,245 +45,378 @@ horizontal_scroll_mode = 0
 [node name="Content" type="VBoxContainer" parent="UI/Panel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="UI/Panel/Scroll/Content"]
+[node name="Header" type="VBoxContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.92, 0.13, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="UI/Panel/Scroll/Content/Header"]
+layout_mode = 2
+theme_type_variation = &"EditorTitle"
 text = "Editor de fases"
 horizontal_alignment = 1
 
-[node name="FileButtons" type="GridContainer" parent="UI/Panel/Scroll/Content"]
-layout_mode = 2
-columns = 3
-
-[node name="NewButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
+[node name="FileLabel" type="Label" parent="UI/Panel/Scroll/Content/Header"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Novo"
-
-[node name="OpenButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Abrir"
-
-[node name="SaveButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Salvar"
-
-[node name="SaveAsButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Salvar como"
-
-[node name="TestButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Testar"
-
-[node name="BackButton" type="Button" parent="UI/Panel/Scroll/Content/FileButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Menu"
-
-[node name="FileLabel" type="Label" parent="UI/Panel/Scroll/Content"]
-unique_name_in_owner = true
-layout_mode = 2
+mouse_filter = 0
+theme_type_variation = &"FileChip"
 text = "Arquivo: (não salvo)"
-label_settings = SubResource("LabelSettings_hint")
+horizontal_alignment = 1
 text_overrun_behavior = 3
 
-[node name="Separator1" type="HSeparator" parent="UI/Panel/Scroll/Content"]
+[node name="FileCard" type="PanelContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
+theme_type_variation = &"EditorCard"
 
-[node name="ToolsLabel" type="Label" parent="UI/Panel/Scroll/Content"]
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Content/FileCard"]
 layout_mode = 2
-text = "Ferramentas"
-label_settings = SubResource("LabelSettings_section")
+theme_override_constants/separation = 8
 
-[node name="ToolGrid" type="GridContainer" parent="UI/Panel/Scroll/Content"]
+[node name="FileButtons" type="GridContainer" parent="UI/Panel/Scroll/Content/FileCard/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="NewButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/FileButtons"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Começar uma fase em branco"
+text = "Novo"
+
+[node name="OpenButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/FileButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Abrir uma fase salva"
+text = "Abrir"
+
+[node name="SaveButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/FileButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Salvar (Ctrl+S)"
+text = "Salvar"
+
+[node name="SaveAsButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/FileButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Salvar em outro arquivo"
+text = "Salvar como"
+
+[node name="PlayButtons" type="HBoxContainer" parent="UI/Panel/Scroll/Content/FileCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BackButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/PlayButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Voltar ao menu principal"
+text = "Menu"
+
+[node name="TestButton" type="Button" parent="UI/Panel/Scroll/Content/FileCard/VBox/PlayButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Jogar a fase agora"
+theme_type_variation = &"AccentButton"
+text = "Testar fase"
+
+[node name="ToolsCard" type="PanelContainer" parent="UI/Panel/Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"EditorCard"
+
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ToolsLabel" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "FERRAMENTAS"
+
+[node name="ToolGrid" type="GridContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
+unique_name_in_owner = true
+texture_filter = 2
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
 columns = 4
 
-[node name="ToolHint" type="Label" parent="UI/Panel/Scroll/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
+[node name="HintBox" type="PanelContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
 layout_mode = 2
-label_settings = SubResource("LabelSettings_hint")
+theme_type_variation = &"HintBox"
+
+[node name="ToolHint" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/HintBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
 autowrap_mode = 3
 
-[node name="GhostOptions" type="VBoxContainer" parent="UI/Panel/Scroll/Content"]
+[node name="GhostOptions" type="VBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="ColorRow" type="HBoxContainer" parent="UI/Panel/Scroll/Content/GhostOptions"]
+[node name="ColorRow" type="HBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions/ColorRow"]
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/ColorRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Cor"
 
-[node name="GhostColor" type="OptionButton" parent="UI/Panel/Scroll/Content/GhostOptions/ColorRow"]
+[node name="GhostColor" type="OptionButton" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/ColorRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 
-[node name="SpeedRow" type="HBoxContainer" parent="UI/Panel/Scroll/Content/GhostOptions"]
+[node name="SpeedRow" type="HBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions/SpeedRow"]
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/SpeedRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Velocidade (células/s)"
 
-[node name="GhostSpeed" type="SpinBox" parent="UI/Panel/Scroll/Content/GhostOptions/SpeedRow"]
+[node name="GhostSpeed" type="SpinBox" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/SpeedRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 min_value = 0.5
 max_value = 30.0
 step = 0.5
 value = 7.5
 
-[node name="RouteButtons" type="HBoxContainer" parent="UI/Panel/Scroll/Content/GhostOptions"]
+[node name="RouteButtons" type="HBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
-[node name="UndoRouteButton" type="Button" parent="UI/Panel/Scroll/Content/GhostOptions/RouteButtons"]
+[node name="UndoRouteButton" type="Button" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/RouteButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Desfazer trecho"
 
-[node name="ClearRouteButton" type="Button" parent="UI/Panel/Scroll/Content/GhostOptions/RouteButtons"]
+[node name="ClearRouteButton" type="Button" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions/RouteButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Limpar rota"
 
-[node name="RouteInfo" type="Label" parent="UI/Panel/Scroll/Content/GhostOptions"]
+[node name="RouteInfo" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/GhostOptions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-label_settings = SubResource("LabelSettings_hint")
+theme_type_variation = &"HintLabel"
 autowrap_mode = 3
 
-[node name="PairOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content"]
+[node name="PairOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/PairOptions"]
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/PairOptions"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Cor do par"
 
-[node name="PairColor" type="OptionButton" parent="UI/Panel/Scroll/Content/PairOptions"]
+[node name="PairColor" type="OptionButton" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/PairOptions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 
-[node name="WallOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content"]
+[node name="WallOptions" type="HBoxContainer" parent="UI/Panel/Scroll/Content/ToolsCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/WallOptions"]
+[node name="Label" type="Label" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/WallOptions"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Estilo"
 
-[node name="WallStyle" type="OptionButton" parent="UI/Panel/Scroll/Content/WallOptions"]
+[node name="WallStyle" type="OptionButton" parent="UI/Panel/Scroll/Content/ToolsCard/VBox/WallOptions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(170, 0)
 layout_mode = 2
 
-[node name="Separator2" type="HSeparator" parent="UI/Panel/Scroll/Content"]
+[node name="LevelCard" type="PanelContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
+theme_type_variation = &"EditorCard"
 
-[node name="LevelLabel" type="Label" parent="UI/Panel/Scroll/Content"]
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Content/LevelCard"]
 layout_mode = 2
-text = "Fase"
-label_settings = SubResource("LabelSettings_section")
+theme_override_constants/separation = 8
 
-[node name="NameEdit" type="LineEdit" parent="UI/Panel/Scroll/Content"]
+[node name="LevelLabel" type="Label" parent="UI/Panel/Scroll/Content/LevelCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "FASE"
+
+[node name="NameLabel" type="Label" parent="UI/Panel/Scroll/Content/LevelCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Nome"
+
+[node name="NameEdit" type="LineEdit" parent="UI/Panel/Scroll/Content/LevelCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "Nome da fase"
 
-[node name="InstructionsLabel" type="Label" parent="UI/Panel/Scroll/Content"]
+[node name="InstructionsLabel" type="Label" parent="UI/Panel/Scroll/Content/LevelCard/VBox"]
 layout_mode = 2
+theme_type_variation = &"HintLabel"
 text = "Instruções exibidas no início (opcional)"
-label_settings = SubResource("LabelSettings_hint")
+autowrap_mode = 3
 
-[node name="InstructionsEdit" type="TextEdit" parent="UI/Panel/Scroll/Content"]
+[node name="InstructionsEdit" type="TextEdit" parent="UI/Panel/Scroll/Content/LevelCard/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
+placeholder_text = "Ex.: pegue a chave antes de abrir a porta"
 wrap_mode = 1
 
-[node name="Scoring" type="GridContainer" parent="UI/Panel/Scroll/Content"]
+[node name="ScoringCard" type="PanelContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
+theme_type_variation = &"EditorCard"
+
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Content/ScoringCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ScoringLabel" type="Label" parent="UI/Panel/Scroll/Content/ScoringCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "PONTUAÇÃO"
+
+[node name="Scoring" type="GridContainer" parent="UI/Panel/Scroll/Content/ScoringCard/VBox"]
+layout_mode = 2
+theme_override_constants/v_separation = 6
 columns = 2
 
-[node name="BonusLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="BonusLabel" type="Label" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Bônus da fase"
 
-[node name="BonusSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="BonusSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 max_value = 10000.0
 
-[node name="MovesLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="MovesLabel" type="Label" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Peso dos movimentos"
 
-[node name="MovesSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="MovesSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 max_value = 10000.0
 
-[node name="TimeLabel" type="Label" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="TimeLabel" type="Label" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Peso do tempo"
 
-[node name="TimeSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/Scoring"]
+[node name="TimeSpin" type="SpinBox" parent="UI/Panel/Scroll/Content/ScoringCard/VBox/Scoring"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 max_value = 10000.0
 
-[node name="ScoringHint" type="Label" parent="UI/Panel/Scroll/Content"]
-custom_minimum_size = Vector2(280, 0)
+[node name="ScoringHint" type="Label" parent="UI/Panel/Scroll/Content/ScoringCard/VBox"]
 layout_mode = 2
+theme_type_variation = &"HintLabel"
 text = "Pontos = bônus + peso dos movimentos ÷ movimentos + peso do tempo ÷ segundos"
-label_settings = SubResource("LabelSettings_hint")
 autowrap_mode = 3
 
-[node name="Separator3" type="HSeparator" parent="UI/Panel/Scroll/Content"]
+[node name="HelpCard" type="PanelContainer" parent="UI/Panel/Scroll/Content"]
 layout_mode = 2
+theme_type_variation = &"EditorCard"
 
-[node name="Help" type="Label" parent="UI/Panel/Scroll/Content"]
-custom_minimum_size = Vector2(280, 0)
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Content/HelpCard"]
 layout_mode = 2
-text = "Botão esquerdo: usar a ferramenta
-Botão direito: apagar
-Teclas 1–9: trocar de ferramenta
-Ctrl+S: salvar"
-label_settings = SubResource("LabelSettings_hint")
+theme_override_constants/separation = 8
+
+[node name="HelpLabel" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "ATALHOS"
+
+[node name="Help" type="GridContainer" parent="UI/Panel/Scroll/Content/HelpCard/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="Key0" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"KeyCap"
+text = "Clique"
+
+[node name="Desc0" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
+text = "Usar a ferramenta"
+autowrap_mode = 3
+
+[node name="Key1" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"KeyCap"
+text = "Botão direito"
+
+[node name="Desc1" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
+text = "Apagar"
+autowrap_mode = 3
+
+[node name="Key2" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"KeyCap"
+text = "1 – 8"
+
+[node name="Desc2" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
+text = "Trocar de ferramenta"
+autowrap_mode = 3
+
+[node name="Key3" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"KeyCap"
+text = "Espaço + arrastar"
+
+[node name="Desc3" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
+text = "Mover a visão"
+autowrap_mode = 3
+
+[node name="Key4" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"KeyCap"
+text = "Ctrl + S"
+
+[node name="Desc4" type="Label" parent="UI/Panel/Scroll/Content/HelpCard/VBox/Help"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
+text = "Salvar"
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="UI"]
