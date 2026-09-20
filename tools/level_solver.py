@@ -272,9 +272,20 @@ def auditar(fase, mostrar_mapa=False, mostrar_becos=False):
             "dispensável: dá para vencer em %d comandos sem movê-lo" % len(alternativa)
             if alternativa else "obrigatório"))
     vistos, vivos = fase.explorar()
-    becos = len(vistos) - len(vivos)
+    mortos = vistos - vivos
     print("  %d situações alcançáveis, %d sem volta (%.1f%%)"
-          % (len(vistos), becos, 100.0 * becos / len(vistos)))
+          % (len(vistos), len(mortos), 100.0 * len(mortos) / len(vistos)))
+    # Numa fase com caixotes, beco com todos eles ainda no lugar é falha de
+    # desenho: o jogador se perdeu só andando. Depois de um empurrão errado é o
+    # risco normal do gênero, e dá para recomeçar a fase no Espaço.
+    if fase.caixotes and mortos:
+        intacto = tuple(sorted(fase.caixotes))
+        antes = [e for e in mortos if e[1] == intacto]
+        if antes:
+            print("  %d deles já sem mexer em caixote nenhum, com o pac em %s"
+                  % (len(antes), sorted({e[0] for e in antes})[:10]))
+        else:
+            print("  nenhum deles antes de mexer num caixote: só se empurra errado")
     if mostrar_becos:
         presas = {e[0] for e in vistos - vivos}
         sempre = {c for c in presas if all(e[0] != c for e in vivos)}

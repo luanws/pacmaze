@@ -75,7 +75,7 @@ Sem argumentos ele audita toda a campanha; passando arquivos, audita só eles. D
 
 - **se tem solução** e qual a sequência de comandos mais curta, escrita com `^ v < >`;
 - **se cada caixote é mesmo necessário** — ele congela um caixote de cada vez e tenta vencer sem movê-lo;
-- **quantos becos sem volta** existem, isto é, situações de onde o jogador já não alcança mais a pílula e precisa reiniciar. As fases da campanha ficam perto de zero; um número alto quase sempre é sinal de que falta uma parede servindo de ponto de parada no caminho de volta;
+- **quantos becos sem volta** existem, isto é, situações de onde o jogador já não alcança mais a pílula e precisa reiniciar. Numa fase sem caixotes o normal é zero, e um número alto quase sempre quer dizer que falta uma parede servindo de ponto de parada no caminho de volta. Onde há caixotes, o script separa os dois casos: beco que aparece **antes** de mexer em qualquer caixote é falha de desenho, porque o jogador se perdeu só andando; depois de um empurrão errado é o risco normal do gênero, e para isso existe o `Espaço`;
 - **erros de montagem**: pac, pílula, chave, porta ou portal em cima de parede, e rondas de fantasma que saem do mapa ou não fecham o circuito.
 
 Para ver o mapa em texto, com `#` de parede, `B` de caixote e `X` nas casas sem volta:
