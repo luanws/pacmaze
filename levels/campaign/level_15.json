@@ -6,7 +6,7 @@
 	"scoring": {"level_bonus":10,"move_sensitivity":200,"time_sensitivity":100},
 	"size": [43,27],
 	"walls": [
-		{"cell":[4,1],"style":"ice"},
+		{"cell":[5,1],"style":"ice"},
 		{"cell":[8,1],"style":"ice"},
 		{"cell":[9,1],"style":"ice"},
 		{"cell":[13,1],"style":"ice"},
@@ -138,6 +138,7 @@
 		{"cell":[21,25],"style":"ice"},
 		{"cell":[34,25],"style":"ice"}
 	],
+	"pushable_walls": [],
 	"player": [4,7],
 	"pill": [39,25],
 	"ghosts": [
@@ -146,7 +147,8 @@
 		{"color":"purple","cell":[36,6],"speed":7.0,"path":[[0,12],[0,-12]]}
 	],
 	"portals": [
-		{"color":"#ff0000","a":[17,19],"b":[17,13]}
+		{"color":"#ff0000","a":[17,19],"b":[17,13]},
+		{"color":"#f2d91a","a":[17,25],"b":[13,13]}
 	],
 	"locks": [
 		{"color":"#00c8ff","key":[3,19],"door":[9,2]},
