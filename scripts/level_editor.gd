@@ -235,7 +235,7 @@ func _tool_icon(t: Tool) -> Texture2D:
 		Tool.KEY:
 			return preload("res://assets/sprites/key.png")
 		Tool.PUSH_WALL:
-			return _atlas_icon(WALLS_TEXTURE, Rect2(6 * LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE))
+			return _atlas_icon(WALLS_TEXTURE, Rect2(6 * LevelData.TILE_SIZE, 2 * LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE))
 	var image := Image.create(30, 30, false, Image.FORMAT_RGBA8)
 	if t == Tool.ERASE:
 		var color := Color(0.95, 0.4, 0.4)
@@ -597,19 +597,6 @@ func _draw_overlay() -> void:
 		overlay.draw_dashed_line(_center(lock.key), _center(lock.door), Color(lock.color, 0.5), 2.0, 4.0)
 	if has_pending:
 		overlay.draw_rect(_cell_rect(pending_cell), PAIR_COLORS[pair_color_index], false, 3.0)
-
-	# Mark pushable walls with a small arrows icon so they're visually distinct.
-	var push_color := Color(1, 1, 0.3, 0.8)
-	for y in data.size.y:
-		for x in data.size.x:
-			if data.get_cell(Vector2i(x, y)) == LevelData.Cell.PUSHABLE:
-				var center := _center(Vector2i(x, y))
-				var s := LevelData.TILE_SIZE * 0.2
-				# Four small arrows pointing outward.
-				for dir: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-					var tip: Vector2 = center + dir * (s * 1.6)
-					var base: Vector2 = center + dir * (s * 0.4)
-					overlay.draw_line(base, tip, push_color, 2.0)
 
 	if tool == Tool.ROUTE and selected_ghost >= 0:
 		var end := data.ghosts[selected_ghost].path_end()

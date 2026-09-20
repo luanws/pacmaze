@@ -119,7 +119,7 @@ func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
 	pushable_cells.erase(cell)
 	pushable_cells[dest] = style
 	walls.erase_cell(cell)
-	var atlas := Vector2i(style, 1)
+	var atlas := Vector2i(style, 2)
 	walls.set_cell(dest, 0, atlas)
 	_rebuild_wall_shadow()
 	Sfx.play("bump", 0.1)
@@ -135,7 +135,7 @@ func reset_pushable_walls() -> void:
 	pushable_cells = _initial_pushable_cells.duplicate()
 	for cell: Vector2i in pushable_cells:
 		var style: int = pushable_cells[cell]
-		walls.set_cell(cell, 0, Vector2i(style, 1))
+		walls.set_cell(cell, 0, Vector2i(style, 2))
 	_rebuild_wall_shadow()
 
 

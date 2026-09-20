@@ -276,7 +276,9 @@ func get_cell(cell: Vector2i) -> int:
 ## cell (row 0) closes them with a half brick only on the sides where the border
 ## ends: 0 none, 1 left, 2 right, 3 both.
 func wall_atlas_coords(cell: Vector2i) -> Vector2i:
-	if get_cell(cell) == Cell.WALL or get_cell(cell) == Cell.PUSHABLE:
+	if get_cell(cell) == Cell.PUSHABLE:
+		return Vector2i(get_wall_style(cell), 2)
+	if get_cell(cell) == Cell.WALL:
 		return Vector2i(get_wall_style(cell), 1)
 	# Border cells
 	var cap_left := int(get_cell(cell + Vector2i.LEFT) != Cell.BORDER)
