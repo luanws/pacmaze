@@ -26,20 +26,21 @@ Cada fase é um arquivo JSON que o jogo lê e monta ao carregar.
 - As fases da campanha ficam em [`levels/campaign/`](levels/campaign/) e são carregadas em ordem alfabética.
 - As fases criadas no editor ficam em `user://levels/`. No Windows, essa pasta é `%APPDATA%\Godot\app_userdata\Pacmaze\levels`.
 
-O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_data.gd). No mapa, `+` é um bloco de borda, `#` é parede e `.` é vazio. As posições são `[coluna, linha]` a partir do canto superior esquerdo:
+O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_data.gd). O tamanho vem em `size` (`[colunas, linhas]`) e a borda é sempre o anel externo da grade, então só as paredes de dentro entram no arquivo. As posições são `[coluna, linha]` a partir do canto superior esquerdo:
 
 ```json
 {
 	"format": "pacmaze-level",
-	"version": 1,
+	"version": 2,
 	"name": "Minha fase",
 	"instructions": "",
 	"scoring": {"level_bonus":10,"move_sensitivity":200,"time_sensitivity":100},
-	"map": [
-		"+++++++",
-		"+..#..+",
-		"+.....+",
-		"+++++++"
+	"size": [7,4],
+	"walls": [
+		{"cell":[3,1],"style":"classic"}
+	],
+	"pushable_walls": [
+		{"cell":[4,2],"style":"crate"}
 	],
 	"player": [1,2],
 	"pill": [5,1],
@@ -53,12 +54,45 @@ O formato está documentado no topo de [`scripts/level_data.gd`](scripts/level_d
 }
 ```
 
-- `portals`: pares de portais. Entrar em um leva ao outro.
+- `walls`: as paredes fixas. O `style` escolhe o desenho do bloco (`classic`, `neon`, `red_brick`, `gem`, `metal`, `grass`, `crate`, `ice`, `lava`, `circuit`, `candy`).
+- `pushable_walls`: caixotes. Param o pac como qualquer parede, mas se ele encostar num deles parado, o caixote anda uma casa e o pac ocupa o lugar dele — ou seja, empurrar é o único jeito de andar uma casa só, em vez de deslizar até bater. O caixote não sai do lugar se atrás dele houver parede, porta fechada, borda ou outro caixote. Ao reiniciar a fase, todos voltam ao lugar. Como o pac só muda de direção depois de parar, um caixote bem posicionado vira o freio que deixa ele parar na coluna ou linha certa — é essa a ideia das fases 21 a 25.
+- `portals`: pares de portais. Entrar em um leva ao outro, e os dois trocam de lugar.
 - `locks`: pares de chave e porta. A porta (`door`) bloqueia o pac como uma parede. Passando pela chave (`key`), o pac a guarda, e ela aparece no topo da tela. Para abrir a porta, o pac precisa estar parado ao lado dela e apertar a seta na direção da porta. A chave é gasta, a porta se abre e o pac continua parado até o próximo comando. Quando o pac morre ou volta ao início, as chaves e as portas voltam ao lugar.
 
 ### Editor de fases
 
 No menu principal, entre em **Editor de fases**. Lá você desenha paredes, posiciona o pac, a pílula, os fantasmas (com as rotas), os portais e as chaves com suas portas, salva e testa a fase sem sair do jogo. **Salvar** e **Abrir** usam a janela de arquivos do sistema operacional, então a fase pode ficar em qualquer pasta. As fases salvas na pasta padrão (`user://levels/`) aparecem em **Selecionar fase → Fases criadas**.
+
+### Conferindo uma fase sem abrir o jogo
+
+[`tools/level_solver.py`](tools/level_solver.py) simula as regras do jogo (o deslize até bater, o empurrão de caixote, os portais que trocam de lugar, a porta que só abre com a chave) e resolve a fase por busca em largura. Só precisa de Python 3, sem dependências.
+
+```bash
+python tools/level_solver.py
+```
+
+Sem argumentos ele audita toda a campanha; passando arquivos, audita só eles. De cada fase ele responde:
+
+- **se tem solução** e qual a sequência de comandos mais curta, escrita com `^ v < >`;
+- **se cada caixote é mesmo necessário** — ele congela um caixote de cada vez e tenta vencer sem movê-lo;
+- **quantos becos sem volta** existem, isto é, situações de onde o jogador já não alcança mais a pílula e precisa reiniciar. As fases da campanha ficam perto de zero; um número alto quase sempre é sinal de que falta uma parede servindo de ponto de parada no caminho de volta;
+- **erros de montagem**: pac, pílula, chave, porta ou portal em cima de parede, e rondas de fantasma que saem do mapa ou não fecham o circuito.
+
+Para ver o mapa em texto, com `#` de parede, `B` de caixote e `X` nas casas sem volta:
+
+```bash
+python tools/level_solver.py --becos levels/campaign/level_25.json
+```
+
+Os fantasmas ficam de fora da busca: eles andam em circuito fixo e o pac pode esperar a hora de passar, então não mudam o que é alcançável.
+
+### Reordenando as fases da campanha
+
+[`tools/renumber_campaign_level.py`](tools/renumber_campaign_level.py) insere uma fase numa posição da campanha e renumera `level_NN.json` em sequência, sem deixar lacunas. Ele abre um seletor de arquivo e pergunta a posição:
+
+```bash
+python tools/renumber_campaign_level.py
+```
 
 ## Rodando o projeto
 
