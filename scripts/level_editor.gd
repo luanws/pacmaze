@@ -358,7 +358,7 @@ func _paint_wall(cell: Vector2i) -> void:
 	if has_pending and cell == pending_cell:
 		return
 	data.set_wall(cell, wall_style_index)
-	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
+	preview.set_wall_cell(cell, data.wall_atlas_coords(cell))
 	preview.pushable_cells.erase(cell)
 	preview.refresh_push_arrows()
 
@@ -371,7 +371,7 @@ func _paint_pushable_wall(cell: Vector2i) -> void:
 	if has_pending and cell == pending_cell:
 		return
 	data.set_pushable_wall(cell, wall_style_index)
-	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
+	preview.set_wall_cell(cell, data.wall_atlas_coords(cell))
 	preview.pushable_cells[cell] = wall_style_index
 	preview.refresh_push_arrows()
 
@@ -404,7 +404,7 @@ func _erase_at(cell: Vector2i) -> void:
 		return
 	if data.get_cell(cell) in [LevelData.Cell.WALL, LevelData.Cell.PUSHABLE]:
 		data.set_cell(cell, LevelData.Cell.EMPTY)
-		preview.walls.erase_cell(cell)
+		preview.erase_wall_cell(cell)
 		preview.pushable_cells.erase(cell)
 		preview.refresh_push_arrows()
 

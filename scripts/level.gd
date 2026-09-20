@@ -38,6 +38,8 @@ var pill: Node2D
 var pushable_cells := {}
 ## Tracks the initial pushable wall positions for reset.
 var _initial_pushable_cells := {}
+## The dark copy of the walls, kept in sync with every wall edit.
+var _wall_shadow: TileMapLayer
 
 
 # Resolved here instead of @onready: children run _ready() before the level does
@@ -78,12 +80,12 @@ func _add_floor() -> void:
 
 ## A dark copy of the walls, nudged down and to the right, so the blocks stand off the floor.
 func _add_wall_shadow() -> void:
-	var shadow: TileMapLayer = walls.duplicate()
-	shadow.name = "WallShadow"
-	shadow.modulate = Color(0, 0, 0, 0.5)
-	shadow.position += WALL_SHADOW_OFFSET
-	add_child(shadow)
-	move_child(shadow, walls.get_index())
+	_wall_shadow = walls.duplicate()
+	_wall_shadow.name = "WallShadow"
+	_wall_shadow.modulate = Color(0, 0, 0, 0.5)
+	_wall_shadow.position += WALL_SHADOW_OFFSET
+	add_child(_wall_shadow)
+	move_child(_wall_shadow, walls.get_index())
 
 
 func tile_size() -> float:
@@ -120,9 +122,8 @@ func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
 	var style: int = pushable_cells[cell]
 	pushable_cells.erase(cell)
 	pushable_cells[dest] = style
-	walls.erase_cell(cell)
-	walls.set_cell(dest, 0, Vector2i(style, 1))
-	_rebuild_wall_shadow()
+	erase_wall_cell(cell)
+	set_wall_cell(dest, Vector2i(style, 1))
 	Sfx.play("bump", 0.1)
 	return true
 
@@ -131,13 +132,12 @@ func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
 func reset_pushable_walls() -> void:
 	# Erase current pushable wall tiles.
 	for cell: Vector2i in pushable_cells:
-		walls.erase_cell(cell)
+		erase_wall_cell(cell)
 	# Restore initial positions.
 	pushable_cells = _initial_pushable_cells.duplicate()
 	for cell: Vector2i in pushable_cells:
 		var style: int = pushable_cells[cell]
-		walls.set_cell(cell, 0, Vector2i(style, 1))
-	_rebuild_wall_shadow()
+		set_wall_cell(cell, Vector2i(style, 1))
 
 
 ## Draws the push hints above the walls, but still under the pac and the entities.
@@ -154,11 +154,16 @@ func refresh_push_arrows() -> void:
 	$PushArrows.queue_redraw()
 
 
-func _rebuild_wall_shadow() -> void:
-	var old_shadow := get_node_or_null("WallShadow")
-	if old_shadow:
-		old_shadow.queue_free()
-	_add_wall_shadow()
+## Every wall edit goes through these two, so the shadow copy never keeps a
+## stale tile behind a block that moved or was erased.
+func set_wall_cell(cell: Vector2i, atlas_coords: Vector2i) -> void:
+	walls.set_cell(cell, 0, atlas_coords)
+	_wall_shadow.set_cell(cell, 0, atlas_coords)
+
+
+func erase_wall_cell(cell: Vector2i) -> void:
+	walls.erase_cell(cell)
+	_wall_shadow.erase_cell(cell)
 
 
 func is_inside(cell: Vector2i) -> bool:
