@@ -235,7 +235,7 @@ func _tool_icon(t: Tool) -> Texture2D:
 		Tool.KEY:
 			return preload("res://assets/sprites/key.png")
 		Tool.PUSH_WALL:
-			return _atlas_icon(WALLS_TEXTURE, Rect2(6 * LevelData.TILE_SIZE, 2 * LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE))
+			return _push_wall_icon()
 	var image := Image.create(30, 30, false, Image.FORMAT_RGBA8)
 	if t == Tool.ERASE:
 		var color := Color(0.95, 0.4, 0.4)
@@ -251,6 +251,26 @@ func _tool_icon(t: Tool) -> Texture2D:
 			image.fill_rect(Rect2i(21, y, 3, 3), color)
 		image.fill_rect(Rect2i(4, 19, 7, 7), Color.WHITE)
 		image.fill_rect(Rect2i(19, 4, 7, 7), color)
+	return ImageTexture.create_from_image(image)
+
+
+## A shrunken crate ringed by the same arrows the pushable walls show in game.
+func _push_wall_icon() -> Texture2D:
+	var tile := LevelData.TILE_SIZE
+	var block := WALLS_TEXTURE.get_image().get_region(Rect2i(6 * tile, tile, tile, tile))
+	block.convert(Image.FORMAT_RGBA8)
+	block.resize(18, 18, Image.INTERPOLATE_LANCZOS)
+	var image := Image.create(tile, tile, false, Image.FORMAT_RGBA8)
+	image.blit_rect(block, Rect2i(0, 0, 18, 18), Vector2i(6, 6))
+	var color := PushArrows.COLOR
+	# An arrowhead on each side, pointing at the block: rows of 5, 3 and 1 pixels.
+	for i in 3:
+		var width := 5 - i * 2
+		var offset := 15 - width / 2
+		image.fill_rect(Rect2i(offset, 1 + i, width, 1), color)
+		image.fill_rect(Rect2i(offset, 28 - i, width, 1), color)
+		image.fill_rect(Rect2i(1 + i, offset, 1, width), color)
+		image.fill_rect(Rect2i(28 - i, offset, 1, width), color)
 	return ImageTexture.create_from_image(image)
 
 
@@ -339,6 +359,8 @@ func _paint_wall(cell: Vector2i) -> void:
 		return
 	data.set_wall(cell, wall_style_index)
 	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
+	preview.pushable_cells.erase(cell)
+	preview.refresh_push_arrows()
 
 
 func _paint_pushable_wall(cell: Vector2i) -> void:
@@ -350,6 +372,8 @@ func _paint_pushable_wall(cell: Vector2i) -> void:
 		return
 	data.set_pushable_wall(cell, wall_style_index)
 	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
+	preview.pushable_cells[cell] = wall_style_index
+	preview.refresh_push_arrows()
 
 
 func _erase_at(cell: Vector2i) -> void:
@@ -381,6 +405,8 @@ func _erase_at(cell: Vector2i) -> void:
 	if data.get_cell(cell) in [LevelData.Cell.WALL, LevelData.Cell.PUSHABLE]:
 		data.set_cell(cell, LevelData.Cell.EMPTY)
 		preview.walls.erase_cell(cell)
+		preview.pushable_cells.erase(cell)
+		preview.refresh_push_arrows()
 
 
 ## The pac and the pill need a free cell that isn't a portal nor the other marker.

@@ -52,6 +52,7 @@ func _ready() -> void:
 	_initial_pushable_cells = pushable_cells.duplicate()
 	_add_floor()
 	_add_wall_shadow()
+	_add_push_arrows()
 
 
 func _process(delta: float) -> void:
@@ -100,27 +101,27 @@ func is_pushable_wall(cell: Vector2i) -> bool:
 	return pushable_cells.has(cell)
 
 
-## Tries to push the pushable wall at `cell` in `dir`. Returns true if pushed.
-func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
+## Whether the pushable wall at `cell` has room to move one cell in `dir`.
+func can_push(cell: Vector2i, dir: Vector2i) -> bool:
 	if not is_pushable_wall(cell):
 		return false
 	var dest := cell + dir
-	# Can't push outside the grid.
-	if not is_inside(dest):
-		return false
-	# Can't push into any occupied cell (wall, border, door, another pushable).
-	if walls.get_cell_source_id(dest) != -1:
-		return false
-	var door := get_door_at(dest)
-	if door != null and not door.is_open:
+	# Nowhere to go outside the grid, nor into an occupied cell: a wall, the
+	# border, a closed door or another pushable wall.
+	return is_inside(dest) and not is_wall(dest)
+
+
+## Tries to push the pushable wall at `cell` in `dir`. Returns true if pushed.
+func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
+	if not can_push(cell, dir):
 		return false
 	# Move the pushable wall: erase old, set new.
+	var dest := cell + dir
 	var style: int = pushable_cells[cell]
 	pushable_cells.erase(cell)
 	pushable_cells[dest] = style
 	walls.erase_cell(cell)
-	var atlas := Vector2i(style, 2)
-	walls.set_cell(dest, 0, atlas)
+	walls.set_cell(dest, 0, Vector2i(style, 1))
 	_rebuild_wall_shadow()
 	Sfx.play("bump", 0.1)
 	return true
@@ -135,8 +136,22 @@ func reset_pushable_walls() -> void:
 	pushable_cells = _initial_pushable_cells.duplicate()
 	for cell: Vector2i in pushable_cells:
 		var style: int = pushable_cells[cell]
-		walls.set_cell(cell, 0, Vector2i(style, 2))
+		walls.set_cell(cell, 0, Vector2i(style, 1))
 	_rebuild_wall_shadow()
+
+
+## Draws the push hints above the walls, but still under the pac and the entities.
+func _add_push_arrows() -> void:
+	var arrows := PushArrows.new()
+	arrows.name = "PushArrows"
+	arrows.level = self
+	add_child(arrows)
+	move_child(arrows, walls.get_index() + 1)
+
+
+## Redraws the push hints of a frozen level, for the editor preview.
+func refresh_push_arrows() -> void:
+	$PushArrows.queue_redraw()
 
 
 func _rebuild_wall_shadow() -> void:
