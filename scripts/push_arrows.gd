@@ -12,9 +12,9 @@ const OUTLINE_COLOR := Color(0.35, 0.22, 0.05)
 const SHADOW_OFFSET := Vector2(1.0, 1.5)
 const PULSE_SPEED := 3.0
 ## How far the middle of the arrow sits from the middle of the block, in tiles.
-const DISTANCE := 0.85
+const DISTANCE := 0.73
 ## Arrowhead pointing right, in pixels of a 30 px tile.
-const ARROW: Array[Vector2] = [Vector2(5.5, 0), Vector2(-3.5, -5.0), Vector2(-3.5, 5.0)]
+const ARROW: Array[Vector2] = [Vector2(3.5, 0), Vector2(-2.5, -6.0), Vector2(-2.5, 6.0)]
 
 var level: Level
 
