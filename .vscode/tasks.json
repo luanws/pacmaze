@@ -16,7 +16,7 @@
     {
       "label": "Build (Web + Windows)",
       "type": "shell",
-      "command": "New-Item -ItemType Directory -Force -Path build/windows, build/web | Out-Null; if (-not (Test-Path build/.gdignore)) { New-Item -ItemType File -Path build/.gdignore | Out-Null }; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--import' -NoNewWindow -Wait; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--export-release','\"Windows Desktop\"','build/windows/Pacmaze.exe' -NoNewWindow -Wait; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--export-release','\"Web\"','build/web/index.html' -NoNewWindow -Wait",
+      "command": "New-Item -ItemType Directory -Force -Path build/windows, build/web | Out-Null; if (-not (Test-Path build/.gdignore)) { New-Item -ItemType File -Path build/.gdignore | Out-Null }; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--import' -NoNewWindow -Wait; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--export-release','Windows','build/windows/Pacmaze.exe' -NoNewWindow -Wait; Start-Process -FilePath godot -ArgumentList '--headless','--path','.','--export-release','\"Web\"','build/web/index.html' -NoNewWindow -Wait",
       "group": {
         "kind": "build",
         "isDefault": true
