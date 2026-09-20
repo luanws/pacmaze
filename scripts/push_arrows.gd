@@ -29,10 +29,13 @@ func _draw() -> void:
 	if can_process():
 		pulse = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * PULSE_SPEED)
 	var tile := level.tile_size()
+	# The pac hides the arrow of the side it already stands on.
+	var pac := level.position_to_cell(level.player.position)
 	for cell: Vector2i in level.pushable_cells:
 		for dir: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var from := cell - dir
 			# The pac pushes from the opposite side, so that cell has to be free too.
-			if level.can_push(cell, dir) and _is_free(cell - dir):
+			if from != pac and level.can_push(cell, dir) and _is_free(from):
 				# The arrow also drifts a little toward the block as it lights up.
 				var away := Vector2(dir) * (tile * DISTANCE - 2.0 * pulse)
 				_draw_arrow(level.cell_to_position(cell) - away, dir, pulse, tile / 30.0)
