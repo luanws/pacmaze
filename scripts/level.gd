@@ -34,6 +34,10 @@ var finished := false
 var walls: TileMapLayer
 var player: Player
 var pill: Node2D
+## Dictionary of Vector2i -> int (wall style index) for pushable walls at runtime.
+var pushable_cells := {}
+## Tracks the initial pushable wall positions for reset.
+var _initial_pushable_cells := {}
 
 
 # Resolved here instead of @onready: children run _ready() before the level does
@@ -45,6 +49,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	_initial_pushable_cells = pushable_cells.duplicate()
 	_add_floor()
 	_add_wall_shadow()
 
@@ -89,6 +94,56 @@ func is_wall(cell: Vector2i) -> bool:
 		return true
 	var door := get_door_at(cell)
 	return door != null and not door.is_open
+
+
+func is_pushable_wall(cell: Vector2i) -> bool:
+	return pushable_cells.has(cell)
+
+
+## Tries to push the pushable wall at `cell` in `dir`. Returns true if pushed.
+func try_push_wall(cell: Vector2i, dir: Vector2i) -> bool:
+	if not is_pushable_wall(cell):
+		return false
+	var dest := cell + dir
+	# Can't push outside the grid.
+	if not is_inside(dest):
+		return false
+	# Can't push into any occupied cell (wall, border, door, another pushable).
+	if walls.get_cell_source_id(dest) != -1:
+		return false
+	var door := get_door_at(dest)
+	if door != null and not door.is_open:
+		return false
+	# Move the pushable wall: erase old, set new.
+	var style: int = pushable_cells[cell]
+	pushable_cells.erase(cell)
+	pushable_cells[dest] = style
+	walls.erase_cell(cell)
+	var atlas := Vector2i(style, 1)
+	walls.set_cell(dest, 0, atlas)
+	_rebuild_wall_shadow()
+	Sfx.play("bump", 0.1)
+	return true
+
+
+## Resets pushable walls to their initial positions.
+func reset_pushable_walls() -> void:
+	# Erase current pushable wall tiles.
+	for cell: Vector2i in pushable_cells:
+		walls.erase_cell(cell)
+	# Restore initial positions.
+	pushable_cells = _initial_pushable_cells.duplicate()
+	for cell: Vector2i in pushable_cells:
+		var style: int = pushable_cells[cell]
+		walls.set_cell(cell, 0, Vector2i(style, 1))
+	_rebuild_wall_shadow()
+
+
+func _rebuild_wall_shadow() -> void:
+	var old_shadow := get_node_or_null("WallShadow")
+	if old_shadow:
+		old_shadow.queue_free()
+	_add_wall_shadow()
 
 
 func is_inside(cell: Vector2i) -> bool:

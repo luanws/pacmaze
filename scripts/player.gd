@@ -27,6 +27,7 @@ var inside_portal: Portal
 var _animation_time := 0.0
 var _swipe_start: Variant = null ## Screen position where the current touch began, until it becomes a swipe.
 var _swipe := Vector2i.ZERO ## Direction swiped since the last physics frame.
+var _push_step := false ## When true, the pac advances exactly one cell (after pushing a wall).
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -82,10 +83,12 @@ func _process(delta: float) -> void:
 
 func reset() -> void:
 	direction = Vector2i.ZERO
+	_push_step = false
 	cell = start_cell
 	position = level.cell_to_position(cell)
 	inside_portal = level.get_portal_at(cell)
 	level.reset_keys()
+	level.reset_pushable_walls()
 
 
 func _die() -> void:
@@ -106,8 +109,20 @@ func _read_input() -> void:
 	moved.emit()
 	# Pushing against a door with its key opens it, but the pac stays put until the next command.
 	if not level.try_open_door(cell + chosen):
-		direction = chosen
-		Sfx.play("move", 0.05)
+		var next := cell + chosen
+		# If the next cell is a pushable wall, try to push it.
+		if level.is_pushable_wall(next):
+			if level.try_push_wall(next, chosen):
+				# Push succeeded: move the pac one cell into the freed spot.
+				direction = chosen
+				_push_step = true
+				Sfx.play("move", 0.05)
+			else:
+				# Can't push (blocked behind). Bump.
+				Sfx.play("bump", 0.1)
+		else:
+			direction = chosen
+			Sfx.play("move", 0.05)
 
 
 func _advance(distance: float) -> void:
@@ -127,6 +142,11 @@ func _advance(distance: float) -> void:
 			distance -= remaining / tile
 			cell = next
 			_on_cell_entered()
+			# After pushing a wall, stop after one cell.
+			if _push_step:
+				_push_step = false
+				direction = Vector2i.ZERO
+				return
 		else:
 			position = position.move_toward(target, step)
 			distance -= step / tile

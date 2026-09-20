@@ -10,13 +10,14 @@ extends RefCounted
 ##   "scoring": {"level_bonus": 10, "move_sensitivity": 200, "time_sensitivity": 100},
 ##   "size": [width, height],
 ##   "walls": [{"cell": [x, y], "style": "classic"}],
+##   "pushable_walls": [{"cell": [x, y], "style": "crate"}],
 ##   "player": [x, y], "pill": [x, y],
 ##   "ghosts": [{"color": "blue", "cell": [x, y], "speed": 7.5, "path": [[dx, dy], ...]}],
 ##   "portals": [{"color": "#ff0000", "a": [x, y], "b": [x, y]}],
 ##   "locks": [{"color": "#00c8ff", "key": [x, y], "door": [x, y]}]   # the key opens the door
 ## }
 
-enum Cell { EMPTY, WALL, BORDER }
+enum Cell { EMPTY, WALL, BORDER, PUSHABLE }
 
 const FORMAT := "pacmaze-level"
 const VERSION := 2
@@ -133,6 +134,9 @@ static func from_dict(d: Dictionary) -> LevelData:
 	for w: Dictionary in d.get("walls", []):
 		var style := maxi(WALL_STYLE_NAMES.find(w.get("style", "classic")), 0)
 		data.set_wall(_to_cell(w.get("cell"), Vector2i.ZERO), style)
+	for pw: Dictionary in d.get("pushable_walls", []):
+		var style := maxi(WALL_STYLE_NAMES.find(pw.get("style", "crate")), 0)
+		data.set_pushable_wall(_to_cell(pw.get("cell"), Vector2i.ZERO), style)
 	data.player = _to_cell(d.get("player"), Vector2i(1, data.size.y - 2))
 	data.pill = _to_cell(d.get("pill"), Vector2i(data.size.x - 2, 1))
 
@@ -178,11 +182,17 @@ static func _from_cell(cell: Vector2i) -> Array:
 
 func to_dict() -> Dictionary:
 	var wall_list := []
+	var pushable_wall_list := []
 	for y in size.y:
 		for x in size.x:
 			var cell := Vector2i(x, y)
 			if get_cell(cell) == Cell.WALL:
 				wall_list.append({
+					"cell": _from_cell(cell),
+					"style": WALL_STYLE_NAMES[get_wall_style(cell)],
+				})
+			elif get_cell(cell) == Cell.PUSHABLE:
+				pushable_wall_list.append({
 					"cell": _from_cell(cell),
 					"style": WALL_STYLE_NAMES[get_wall_style(cell)],
 				})
@@ -220,6 +230,7 @@ func to_dict() -> Dictionary:
 		},
 		"size": _from_cell(size),
 		"walls": wall_list,
+		"pushable_walls": pushable_wall_list,
 		"player": _from_cell(player),
 		"pill": _from_cell(pill),
 		"ghosts": ghost_list,
@@ -265,8 +276,9 @@ func get_cell(cell: Vector2i) -> int:
 ## cell (row 0) closes them with a half brick only on the sides where the border
 ## ends: 0 none, 1 left, 2 right, 3 both.
 func wall_atlas_coords(cell: Vector2i) -> Vector2i:
-	if get_cell(cell) != Cell.BORDER:
+	if get_cell(cell) == Cell.WALL or get_cell(cell) == Cell.PUSHABLE:
 		return Vector2i(get_wall_style(cell), 1)
+	# Border cells
 	var cap_left := int(get_cell(cell + Vector2i.LEFT) != Cell.BORDER)
 	var cap_right := int(get_cell(cell + Vector2i.RIGHT) != Cell.BORDER)
 	return Vector2i(cap_left + cap_right * 2, 0)
@@ -285,6 +297,13 @@ func get_wall_style(cell: Vector2i) -> int:
 func set_wall(cell: Vector2i, style: int) -> void:
 	if is_inside(cell):
 		set_cell(cell, Cell.WALL)
+		wall_styles[cell.y * size.x + cell.x] = style
+
+
+## Makes the cell a pushable wall of the given style.
+func set_pushable_wall(cell: Vector2i, style: int) -> void:
+	if is_inside(cell):
+		set_cell(cell, Cell.PUSHABLE)
 		wall_styles[cell.y * size.x + cell.x] = style
 
 
@@ -347,6 +366,8 @@ func instantiate() -> Level:
 			var cell := get_cell(Vector2i(x, y))
 			if cell != Cell.EMPTY:
 				walls.set_cell(Vector2i(x, y), 0, wall_atlas_coords(Vector2i(x, y)))
+				if cell == Cell.PUSHABLE:
+					level.pushable_cells[Vector2i(x, y)] = get_wall_style(Vector2i(x, y))
 
 	level.get_node("Player").position = cell_center(player)
 	level.get_node("Pill").position = cell_center(pill)

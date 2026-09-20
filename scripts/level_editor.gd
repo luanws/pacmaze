@@ -1,7 +1,7 @@
 extends Node2D
 ## In-game level editor: paint the maze, place entities and save the level as a JSON file.
 
-enum Tool { WALL, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL, KEY }
+enum Tool { WALL, ERASE, PLAYER, PILL, GHOST, ROUTE, PORTAL, KEY, PUSH_WALL }
 
 const PANEL_WIDTH := 320.0
 const MARGIN := 24.0
@@ -15,6 +15,7 @@ const TOOL_NAMES := {
 	Tool.ROUTE: "Rota",
 	Tool.PORTAL: "Portal",
 	Tool.KEY: "Chave",
+	Tool.PUSH_WALL: "Empurrável",
 }
 const TOOL_HINTS := {
 	Tool.WALL: "Clique ou arraste para desenhar paredes no estilo escolhido. Pintar sobre uma parede troca o estilo dela.",
@@ -25,6 +26,7 @@ const TOOL_HINTS := {
 	Tool.ROUTE: "Clique em células na mesma linha ou coluna do fim da rota (linhas destacadas) para adicionar trechos ao fantasma selecionado. A rota se repete em loop.",
 	Tool.PORTAL: "Clique em duas células livres para criar um par de portais.",
 	Tool.KEY: "Clique onde fica a chave e depois onde fica a porta. Com a chave da mesma cor, o pac abre a porta empurrando contra ela.",
+	Tool.PUSH_WALL: "Clique ou arraste para desenhar paredes empurráveis. O pac pode empurrá-las se insistir na direção, mas não se houver uma parede fixa atrás.",
 }
 const WALLS_TEXTURE := preload("res://assets/sprites/walls.png")
 ## Same order as LevelData.WALL_STYLE_NAMES.
@@ -172,7 +174,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Dragging paints/erases along the way.
 		if event.button_mask & MOUSE_BUTTON_MASK_RIGHT:
 			_erase_at(cell)
-		elif event.button_mask & MOUSE_BUTTON_MASK_LEFT and tool in [Tool.WALL, Tool.ERASE]:
+		elif event.button_mask & MOUSE_BUTTON_MASK_LEFT and tool in [Tool.WALL, Tool.ERASE, Tool.PUSH_WALL]:
 			_use_tool(cell)
 
 
@@ -232,6 +234,8 @@ func _tool_icon(t: Tool) -> Texture2D:
 			return _atlas_icon(preload("res://assets/sprites/portal.png"), Rect2(0, 0, 30, 30))
 		Tool.KEY:
 			return preload("res://assets/sprites/key.png")
+		Tool.PUSH_WALL:
+			return _atlas_icon(WALLS_TEXTURE, Rect2(6 * LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE))
 	var image := Image.create(30, 30, false, Image.FORMAT_RGBA8)
 	if t == Tool.ERASE:
 		var color := Color(0.95, 0.4, 0.4)
@@ -291,7 +295,7 @@ func _select_tool(new_tool: Tool) -> void:
 	tool_hint.text = TOOL_HINTS[tool]
 	ghost_options.visible = tool in [Tool.GHOST, Tool.ROUTE]
 	pair_options.visible = tool in [Tool.PORTAL, Tool.KEY]
-	wall_options.visible = tool == Tool.WALL
+	wall_options.visible = tool in [Tool.WALL, Tool.PUSH_WALL]
 	has_pending = false
 	overlay.queue_redraw()
 
@@ -320,6 +324,8 @@ func _use_tool(cell: Vector2i) -> void:
 			_place_portal(cell)
 		Tool.KEY:
 			_place_lock(cell)
+		Tool.PUSH_WALL:
+			_paint_pushable_wall(cell)
 
 
 func _paint_wall(cell: Vector2i) -> void:
@@ -332,6 +338,17 @@ func _paint_wall(cell: Vector2i) -> void:
 	if has_pending and cell == pending_cell:
 		return
 	data.set_wall(cell, wall_style_index)
+	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
+
+
+func _paint_pushable_wall(cell: Vector2i) -> void:
+	if data.get_cell(cell) == LevelData.Cell.BORDER:
+		return
+	if cell == data.player or cell == data.pill or data.portal_at(cell) >= 0 or data.lock_at(cell) >= 0:
+		return
+	if has_pending and cell == pending_cell:
+		return
+	data.set_pushable_wall(cell, wall_style_index)
 	preview.walls.set_cell(cell, 0, data.wall_atlas_coords(cell))
 
 
@@ -361,7 +378,7 @@ func _erase_at(cell: Vector2i) -> void:
 		has_pending = false
 		overlay.queue_redraw()
 		return
-	if data.get_cell(cell) == LevelData.Cell.WALL:
+	if data.get_cell(cell) in [LevelData.Cell.WALL, LevelData.Cell.PUSHABLE]:
 		data.set_cell(cell, LevelData.Cell.EMPTY)
 		preview.walls.erase_cell(cell)
 
@@ -580,6 +597,19 @@ func _draw_overlay() -> void:
 		overlay.draw_dashed_line(_center(lock.key), _center(lock.door), Color(lock.color, 0.5), 2.0, 4.0)
 	if has_pending:
 		overlay.draw_rect(_cell_rect(pending_cell), PAIR_COLORS[pair_color_index], false, 3.0)
+
+	# Mark pushable walls with a small arrows icon so they're visually distinct.
+	var push_color := Color(1, 1, 0.3, 0.8)
+	for y in data.size.y:
+		for x in data.size.x:
+			if data.get_cell(Vector2i(x, y)) == LevelData.Cell.PUSHABLE:
+				var center := _center(Vector2i(x, y))
+				var s := LevelData.TILE_SIZE * 0.2
+				# Four small arrows pointing outward.
+				for dir: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+					var tip: Vector2 = center + dir * (s * 1.6)
+					var base: Vector2 = center + dir * (s * 0.4)
+					overlay.draw_line(base, tip, push_color, 2.0)
 
 	if tool == Tool.ROUTE and selected_ghost >= 0:
 		var end := data.ghosts[selected_ghost].path_end()
