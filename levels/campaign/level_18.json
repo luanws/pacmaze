@@ -204,12 +204,13 @@
 		{"cell":[27,25],"style":"candy"},
 		{"cell":[34,25],"style":"candy"}
 	],
+	"pushable_walls": [],
 	"player": [7,12],
 	"pill": [13,4],
 	"ghosts": [
 		{"color":"blue","cell":[19,9],"speed":8.0,"path":[[0,5],[-9,0],[0,-5],[9,0]]},
 		{"color":"green","cell":[15,23],"speed":8.0,"path":[[-6,0],[0,-3],[6,0],[0,3]]},
-		{"color":"purple","cell":[6,16],"speed":8.0,"path":[[9,0],[-9,0]]},
+		{"color":"purple","cell":[6,16],"speed":8.0,"path":[[9,0],[-9,0],[0,-1],[0,1],[0,-2],[0,2],[0,1],[0,-1],[0,2],[0,-2]]},
 		{"color":"yellow","cell":[7,18],"speed":8.0,"path":[[-5,0],[0,4],[5,0],[0,-4]]}
 	],
 	"portals": [
