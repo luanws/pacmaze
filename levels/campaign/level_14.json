@@ -217,11 +217,12 @@
 		{"cell":[29,25],"style":"crate"},
 		{"cell":[37,25],"style":"crate"}
 	],
+	"pushable_walls": [],
 	"player": [32,10],
 	"pill": [9,10],
 	"ghosts": [
 		{"color":"blue","cell":[23,13],"speed":7.0,"path":[[0,-5],[8,0],[0,5],[-8,0]]},
-		{"color":"green","cell":[2,23],"speed":7.0,"path":[[12,0],[-12,0]]},
+		{"color":"green","cell":[2,23],"speed":7.0,"path":[[12,0],[-12,0],[0,-2],[0,2]]},
 		{"color":"purple","cell":[19,18],"speed":7.0,"path":[[9,0],[0,6],[-9,0],[0,-6]]}
 	],
 	"portals": [],
