@@ -164,5 +164,5 @@ Diferenças na versão web:
 
 ## Créditos
 
-- A música e os efeitos sonoros são sintetizados pelo próprio jogo, em [`scripts/sfx.gd`](scripts/sfx.gd).
+- A música e os efeitos sonoros são sintetizados pelo próprio jogo, em [`scripts/sfx.gd`](scripts/sfx.gd). Cada fase tem a sua trilha, que fica em loop do começo ao fim dela.
 - As imagens da chave e do cadeado (`assets/sprites/key.png` e `assets/sprites/lock.png`) são dos pacotes *Game Icons* e *Game Icons Expansion*, da [Kenney](https://kenney.nl), publicados sob a licença [CC0](https://creativecommons.org/publicdomain/zero/1.0/).

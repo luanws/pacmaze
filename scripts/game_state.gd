@@ -107,6 +107,18 @@ func test_level(data: LevelData, path: String) -> void:
 	_change_scene(GAME_SCENE)
 
 
+## The background loop for the level being played. Each level keeps the same song, so the music
+## never changes in the middle of one and restarting after a death picks it up where it was.
+func level_song() -> int:
+	match mode:
+		Mode.CAMPAIGN:
+			return current_level - 1
+		Mode.CUSTOM:
+			return hash(custom_path)
+		_:
+			return hash(editor_path)
+
+
 func restart_level() -> void:
 	_change_scene(GAME_SCENE)
 

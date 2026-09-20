@@ -2,22 +2,25 @@ extends Node
 ## Retro sound effects and background music, synthesized at startup so the project needs no audio files.
 ## Every button in the game clicks automatically. `M` mutes and unmutes.
 
-enum Wave { SQUARE, TRIANGLE, SINE, NOISE }
+enum Wave { PULSE, TRIANGLE, SINE, NOISE }
 
 const MIX_RATE := 22050
 const VOICES := 8
 const ATTACK := 0.004 ## Seconds.
 const MUSIC_VOLUME_DB := -6.0
-## Background loops. The first plays in the menus; during the levels they all take turns in shuffled order.
+const COMPOSE_BUDGET_USEC := 2500 ## Per frame composing the song after this one, so the game doesn't hitch.
+const COMPOSE_RUSH_USEC := 9000 ## Per frame while the song that should be playing isn't ready yet.
+const ENCODE_CHUNK := 4096 ## Samples converted to PCM at a time once a song is composed.
+## Background loops, one per campaign level (they wrap around) so the music never changes mid-level.
+## `root` is the key's pitch class (C is 0) and `minor` its mode; together they pick the harmony
+## the arpeggio and the second voice are built from.
 ## Melodies have one bar per entry, notes are MIDI numbers (0 is a rest) with lengths in sixteenths.
 ## Bass holds each bar's root and plays `bass_steps` (semitones above it) on the eighths.
-## Drums have one char per sixteenth: k kick, s snare, h hi-hat.
-const PLAYS_PER_SONG := 2 ## Times a song loops before the level playlist moves on.
-const COMPOSE_BUDGET_USEC := 3000 ## Per frame, for songs composed ahead of time, so the game doesn't hitch.
-const ENCODE_CHUNK := 4096 ## Samples converted at a time when a song composed ahead of time is finished.
+## Drums have one char per sixteenth: k kick, s snare, h hi-hat, o open hi-hat.
 const SONGS := [
 	{ # A minor, the original theme.
-		"bpm": 132, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 132, "root": 9, "minor": true,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[69, 2], [72, 2], [76, 2], [81, 2], [79, 2], [76, 2], [72, 4]],
 			[[77, 2], [76, 2], [72, 2], [69, 2], [72, 4], [69, 2], [65, 2]],
@@ -33,7 +36,8 @@ const SONGS := [
 		"drums": "k.h.h.h.k.h.h.h.",
 	},
 	{ # C major, bouncy.
-		"bpm": 150, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 150, "root": 0, "minor": false,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[72, 2], [76, 2], [79, 2], [76, 2], [84, 4], [79, 4]],
 			[[81, 2], [79, 2], [76, 2], [72, 2], [76, 4], [0, 2], [69, 2]],
@@ -49,7 +53,8 @@ const SONGS := [
 		"drums": "k.h.s.h.k.k.s.h.",
 	},
 	{ # D minor, slow and mysterious.
-		"bpm": 108, "lead": Wave.SINE, "lead_volume": 0.16,
+		"bpm": 108, "root": 2, "minor": true,
+		"lead": Wave.SINE,
 		"melody": [
 			[[74, 6], [77, 2], [81, 4], [79, 2], [77, 2]],
 			[[74, 4], [70, 4], [74, 2], [77, 2], [82, 4]],
@@ -65,7 +70,8 @@ const SONGS := [
 		"drums": "k.....h.k...h..h",
 	},
 	{ # E minor, fast and driving.
-		"bpm": 160, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 160, "root": 4, "minor": true,
+		"lead": Wave.PULSE, "duty": 0.125,
 		"melody": [
 			[[76, 1], [76, 1], [83, 2], [76, 1], [76, 1], [81, 2], [79, 2], [78, 2], [76, 4]],
 			[[79, 2], [84, 2], [83, 2], [79, 2], [76, 4], [72, 4]],
@@ -81,7 +87,8 @@ const SONGS := [
 		"drums": "k.h.s.h.k.h.s.hh",
 	},
 	{ # F major, playful.
-		"bpm": 120, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 120, "root": 5, "minor": false,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[72, 2], [77, 2], [81, 2], [84, 6], [81, 2], [77, 2]],
 			[[86, 4], [84, 2], [81, 2], [77, 4], [74, 4]],
@@ -97,7 +104,8 @@ const SONGS := [
 		"drums": "k...s..hk.k.s...",
 	},
 	{ # G major, marching.
-		"bpm": 140, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 140, "root": 7, "minor": false,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[79, 2], [74, 2], [71, 2], [74, 2], [79, 4], [83, 4]],
 			[[84, 2], [83, 2], [81, 2], [79, 2], [76, 4], [72, 4]],
@@ -113,7 +121,8 @@ const SONGS := [
 		"drums": "k.h.s.hkk.h.s.h.",
 	},
 	{ # A minor, a slow ghostly lullaby.
-		"bpm": 96, "lead": Wave.SINE, "lead_volume": 0.16,
+		"bpm": 96, "root": 9, "minor": true,
+		"lead": Wave.SINE,
 		"melody": [
 			[[76, 4], [72, 4], [69, 4], [72, 4]],
 			[[77, 6], [76, 2], [72, 8]],
@@ -129,7 +138,8 @@ const SONGS := [
 		"drums": "k.......h.......",
 	},
 	{ # C minor, racing arpeggios.
-		"bpm": 170, "lead": Wave.SQUARE, "lead_volume": 0.045,
+		"bpm": 170, "root": 0, "minor": true,
+		"lead": Wave.PULSE, "duty": 0.125,
 		"melody": [
 			[[72, 1], [75, 1], [79, 1], [84, 1], [79, 1], [75, 1], [72, 2], [84, 2], [82, 2], [79, 4]],
 			[[80, 2], [84, 2], [87, 2], [84, 2], [80, 4], [75, 4]],
@@ -145,7 +155,8 @@ const SONGS := [
 		"drums": "k.hsk.h.k.hsk.hs",
 	},
 	{ # B-flat major, funky.
-		"bpm": 116, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 116, "root": 10, "minor": false,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[70, 2], [74, 2], [77, 3], [74, 1], [82, 4], [0, 2], [77, 2]],
 			[[79, 2], [82, 2], [79, 2], [74, 2], [70, 4], [74, 4]],
@@ -161,7 +172,8 @@ const SONGS := [
 		"drums": "k..hs.h.k.khs..h",
 	},
 	{ # D major, heroic.
-		"bpm": 144, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 144, "root": 2, "minor": false,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[74, 4], [78, 2], [81, 2], [86, 6], [81, 2]],
 			[[85, 4], [81, 2], [76, 2], [81, 4], [73, 4]],
@@ -177,7 +189,8 @@ const SONGS := [
 		"drums": "k.hhs.h.k.hhs.hh",
 	},
 	{ # F-sharp minor, dreamy.
-		"bpm": 100, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 100, "root": 6, "minor": true,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[78, 8], [81, 4], [85, 4]],
 			[[86, 6], [85, 2], [81, 8]],
@@ -193,7 +206,8 @@ const SONGS := [
 		"drums": "k.......k...h...",
 	},
 	{ # G minor, a frantic chase.
-		"bpm": 176, "lead": Wave.SQUARE, "lead_volume": 0.045,
+		"bpm": 176, "root": 7, "minor": true,
+		"lead": Wave.PULSE, "duty": 0.125,
 		"melody": [
 			[[79, 1], [79, 1], [0, 1], [79, 1], [82, 2], [79, 2], [86, 4], [82, 4]],
 			[[87, 2], [86, 2], [82, 2], [79, 2], [75, 4], [79, 4]],
@@ -209,7 +223,8 @@ const SONGS := [
 		"drums": "k.h.s.hkk.h.s.hs",
 	},
 	{ # E major, cheerful.
-		"bpm": 128, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 128, "root": 4, "minor": false,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[76, 2], [80, 2], [83, 4], [80, 2], [76, 2], [71, 4]],
 			[[78, 2], [83, 2], [87, 4], [85, 2], [83, 2], [78, 4]],
@@ -225,7 +240,8 @@ const SONGS := [
 		"drums": "k.h.s.h.k.hks.h.",
 	},
 	{ # A minor, bluesy with a walking bass.
-		"bpm": 112, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 112, "root": 9, "minor": true,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[69, 2], [72, 2], [74, 1], [75, 1], [76, 2], [79, 4], [76, 4]],
 			[[77, 2], [74, 2], [72, 2], [69, 2], [74, 4], [0, 4]],
@@ -241,7 +257,8 @@ const SONGS := [
 		"drums": "k..h..s.k.hh..s.",
 	},
 	{ # C major, gentle.
-		"bpm": 90, "lead": Wave.SINE, "lead_volume": 0.16,
+		"bpm": 90, "root": 0, "minor": false,
+		"lead": Wave.SINE,
 		"melody": [
 			[[76, 4], [79, 4], [84, 8]],
 			[[81, 4], [76, 4], [72, 8]],
@@ -257,7 +274,8 @@ const SONGS := [
 		"drums": "k...h...k...h...",
 	},
 	{ # D minor, a castle descent.
-		"bpm": 138, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 138, "root": 2, "minor": true,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[74, 2], [77, 2], [81, 2], [77, 2], [86, 4], [81, 4]],
 			[[84, 2], [79, 2], [76, 2], [79, 2], [84, 4], [88, 4]],
@@ -273,7 +291,8 @@ const SONGS := [
 		"drums": "k.h.k.s.k.h.k.s.",
 	},
 	{ # E-flat major, groovy.
-		"bpm": 124, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 124, "root": 3, "minor": false,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[75, 2], [79, 2], [82, 2], [87, 2], [86, 2], [82, 2], [79, 4]],
 			[[84, 4], [79, 2], [75, 2], [72, 4], [75, 4]],
@@ -289,7 +308,8 @@ const SONGS := [
 		"drums": "k..sk.h.k..sk.hh",
 	},
 	{ # B minor, tense.
-		"bpm": 152, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 152, "root": 11, "minor": true,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[83, 2], [78, 2], [74, 2], [78, 2], [83, 2], [86, 2], [83, 4]],
 			[[79, 2], [83, 2], [86, 2], [83, 2], [91, 4], [86, 4]],
@@ -305,7 +325,8 @@ const SONGS := [
 		"drums": "k.h.h.s.k.hkh.s.",
 	},
 	{ # F major, sunny.
-		"bpm": 136, "lead": Wave.SQUARE, "lead_volume": 0.05,
+		"bpm": 136, "root": 5, "minor": false,
+		"lead": Wave.PULSE, "duty": 0.25,
 		"melody": [
 			[[77, 2], [81, 2], [84, 2], [81, 2], [77, 2], [81, 2], [84, 2], [89, 2]],
 			[[86, 4], [81, 4], [77, 4], [74, 4]],
@@ -321,7 +342,8 @@ const SONGS := [
 		"drums": "k.h.s.hhk.h.s.h.",
 	},
 	{ # A major, a bright finale.
-		"bpm": 158, "lead": Wave.TRIANGLE, "lead_volume": 0.12,
+		"bpm": 158, "root": 9, "minor": false,
+		"lead": Wave.TRIANGLE,
 		"melody": [
 			[[81, 2], [85, 2], [88, 2], [93, 2], [88, 2], [85, 2], [81, 4]],
 			[[78, 2], [81, 2], [85, 2], [90, 2], [88, 4], [85, 4]],
@@ -338,15 +360,45 @@ const SONGS := [
 	},
 ]
 
+
+## Two passes over the melody make one loop, around half a minute long: the first plays it bare over
+## an eighth-note arpeggio, the second answers with a harmony voice, sixteenth arpeggios and a
+## busier beat, and its last bar turns into a fill that lands back on the top of the loop.
+const PASSES := 2
+const SONG_CACHE := 3 ## Composed songs kept in memory; each one is a couple of megabytes of PCM.
+const LEAD_VOLUME := 0.12
+const HARMONY_VOLUME := 0.05
+const ARP_VOLUME := 0.045
+const BASS_VOLUME := 0.2
+## Pulse waves are thin and sines are fat; this evens the leads out so no song jumps in level.
+const WAVE_GAIN := {Wave.PULSE: 0.42, Wave.TRIANGLE: 1.0, Wave.SINE: 1.33, Wave.NOISE: 1.0}
+const MAJOR := [0, 2, 4, 5, 7, 9, 11]
+const MINOR := [0, 2, 3, 5, 7, 8, 10]
+const DRUM_FILL := "k...s...s.s.ssso" ## Closes the loop, so coming back to the top is announced.
+## Chord tones the arpeggio walks, up and back down. Six steps against a bar of sixteen keeps it
+## from landing on the same note every beat.
+const ARP_STEPS := [0, 1, 2, 3, 2, 1]
+const VIBRATO_HZ := 5.5
+const VIBRATO_DEPTH := 0.007
+const VIBRATO_DELAY := 0.15 ## Seconds the vibrato takes to reach full depth; short notes stay steady.
+## Attack, decay and release in seconds, sustain as a fraction of the peak. A decay of zero stretches
+## across the whole note, which is the plain fade the sound effects and the drums are made of.
+const ENVELOPES := {
+	"fade": {"attack": ATTACK, "decay": 0.0, "sustain": 0.0, "release": 0.0},
+	"lead": {"attack": 0.008, "decay": 0.09, "sustain": 0.72, "release": 0.09},
+	"harmony": {"attack": 0.025, "decay": 0.09, "sustain": 0.6, "release": 0.11},
+	"bass": {"attack": 0.003, "decay": 0.07, "sustain": 0.62, "release": 0.05},
+	"arp": {"attack": 0.002, "decay": 0.05, "sustain": 0.0, "release": 0.02},
+}
+
 var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
 var _next_player := 0
 var _music_player: AudioStreamPlayer
-var _songs := {} ## Composed streams by index, built ahead of time or the first time each song plays.
+var _songs := {} ## Composed streams by song index.
+var _cached: Array[int] = [] ## What `_songs` holds, least recently started first.
 var _composing: Array[Dictionary] = [] ## Songs being composed a little each frame: index, notes and progress.
-var _song := -1
-var _playlist: Array[int] = [] ## Songs still to play in this round of the shuffle, the next one last.
-var _song_timer: Timer
+var _song := -1 ## The song playing, or the one being composed before it starts.
 
 
 func _ready() -> void:
@@ -370,12 +422,7 @@ func _ready() -> void:
 	_music_player = AudioStreamPlayer.new()
 	_music_player.volume_db = MUSIC_VOLUME_DB
 	add_child(_music_player)
-	_song_timer = Timer.new()
-	_song_timer.one_shot = true
-	_song_timer.timeout.connect(_play_next_in_playlist)
-	add_child(_song_timer)
 	play_song(0)
-	_compose_next_in_playlist()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -393,77 +440,86 @@ func play(sound: String, pitch_variation := 0.0) -> void:
 	player.play()
 
 
-## Switches the background loop and leaves the playlist; the index wraps around, and the current song keeps playing untouched.
+## Switches the background loop, wrapping the index around. Asking for the song already playing
+## does nothing, so walking from the menu into a level that shares it doesn't restart the music.
+## Songs are composed a few milliseconds per frame and start once they are ready, so nothing
+## freezes; the one after this is composed too, ready for whenever the next level begins.
 func play_song(index: int) -> void:
-	_song_timer.stop()
-	_switch_song(posmod(index, SONGS.size()))
-
-
-## Starts the level playlist, or keeps it going if it is already playing (e.g. on the next level).
-func play_playlist() -> void:
-	if _song_timer.is_stopped():
-		_play_next_in_playlist()
-
-
-func _play_next_in_playlist() -> void:
-	_compose_next_in_playlist() # Also refills the playlist when a round of the shuffle is over.
-	_switch_song(_playlist.pop_back())
-	_song_timer.start(_songs[_song].get_length() * PLAYS_PER_SONG)
-	_compose_next_in_playlist()
-
-
-## Starts composing the next song in the background, so switching to it mid-level doesn't freeze the game.
-func _compose_next_in_playlist() -> void:
-	if _playlist.is_empty():
-		_playlist.assign(range(SONGS.size()))
-		_playlist.shuffle()
-		if _playlist.back() == _song: # Don't repeat the song that just ended.
-			_playlist.push_front(_playlist.pop_back())
-	var index: int = _playlist.back()
-	if _songs.has(index) or _composing.any(func(job: Dictionary) -> bool: return job.index == index):
+	index = posmod(index, SONGS.size())
+	if index == _song:
 		return
-	var notes := _music_notes(SONGS[index])
-	var samples := PackedFloat32Array()
-	samples.resize(notes.pop_front())
-	var data := PackedByteArray()
-	data.resize(samples.size() * 2)
-	_composing.append({"index": index, "samples": samples, "notes": notes, "next": 0, "data": data, "encoded": 0})
+	_song = index
+	if _songs.has(index):
+		_start(index)
+	else:
+		_compose(index, true)
+	_compose(posmod(index + 1, SONGS.size()))
 
 
 func _process(_delta: float) -> void:
-	var deadline := Time.get_ticks_usec() + COMPOSE_BUDGET_USEC
+	var budget := COMPOSE_BUDGET_USEC if _songs.has(_song) else COMPOSE_RUSH_USEC
+	var deadline := Time.get_ticks_usec() + budget
 	while not _composing.is_empty() and Time.get_ticks_usec() < deadline:
 		var job := _composing[0]
 		if job.next < job.notes.size():
-			_add_note(job.samples, job.notes[job.next])
+			var note: Dictionary = job.notes[job.next]
+			_add(job.samples, _voice(job.voices, note), note.at)
 			job.next += 1
 			continue
 		var end := mini(job.encoded + ENCODE_CHUNK, job.samples.size())
 		_encode(job.samples, job.data, job.encoded, end)
 		job.encoded = end
 		if end == job.samples.size():
-			_songs[job.index] = _loop(_stream(job.data))
+			_remember(job.index, _loop(_stream(job.data)))
 			_composing.pop_front()
+			if job.index == _song:
+				_start(job.index)
 
 
-func _switch_song(index: int) -> void:
-	if index == _song:
-		return
-	_song = index
-	if not _songs.has(index):
-		# Not composed ahead of time (or not yet finished): compose it all now.
-		for job in _composing:
-			if job.index == index:
-				_composing.erase(job)
-				break
-		var notes := _music_notes(SONGS[index])
-		var samples := PackedFloat32Array()
-		samples.resize(notes.pop_front())
-		for note: Array in notes:
-			_add_note(samples, note)
-		_songs[index] = _loop(_build(samples))
+func _start(index: int) -> void:
 	_music_player.stream = _songs[index]
 	_music_player.play()
+	_cached.erase(index)
+	_cached.append(index)
+
+
+## Queues a song to be composed in the background, unless it is ready already. `urgent` puts it at
+## the head of the queue, for a song the game is waiting on: whoever is ahead of it can wait.
+func _compose(index: int, urgent := false) -> void:
+	if _songs.has(index):
+		return
+	for job: Dictionary in _composing:
+		if job.index == index:
+			if urgent:
+				_composing.erase(job)
+				_composing.push_front(job)
+			return
+	var notes := _music_notes(SONGS[index])
+	var samples := PackedFloat32Array()
+	samples.resize(notes.pop_front())
+	var data := PackedByteArray()
+	data.resize(samples.size() * 2)
+	var job := {
+		"index": index, "samples": samples, "notes": notes, "next": 0,
+		"data": data, "encoded": 0, "voices": {},
+	}
+	if urgent:
+		_composing.push_front(job)
+	else:
+		_composing.append(job)
+
+
+## Holds on to the most recent songs and drops the rest, so a long session doesn't keep every loop.
+func _remember(index: int, stream: AudioStreamWAV) -> void:
+	_songs[index] = stream
+	_cached.erase(index)
+	_cached.append(index)
+	while _cached.size() > SONG_CACHE:
+		var oldest: int = _cached.pop_front()
+		if oldest == _song:
+			_cached.append(oldest) # Never drop what is playing.
+			continue
+		_songs.erase(oldest)
 
 
 func _on_node_added(node: Node) -> void:
@@ -471,39 +527,108 @@ func _on_node_added(node: Node) -> void:
 		node.pressed.connect(play.bind("click"))
 
 
-## Chiptune loop: lead melody, triangle bass on the eighths, kick and snare with noise hi-hats.
-## Returns the loop length in samples followed by its notes, each the arguments of `_tone` plus the sample to start at.
+## Builds one loop of a song: the loop's length in samples, followed by every note in it.
 func _music_notes(song: Dictionary) -> Array:
 	var step: float = 15.0 / song.bpm ## A sixteenth note, in seconds.
 	var melody: Array = song.melody
-	var drums: String = song.drums
+	var bars: int = melody.size()
 	var bar_length := int(step * 16 * MIX_RATE)
-	var notes: Array = [bar_length * melody.size()]
-	for bar in melody.size():
-		var start := bar * bar_length
-		var offset := 0
-		for note: Array in melody[bar]:
-			if note[0] > 0:
-				var hz := _midi_to_hz(note[0])
-				notes.append([song.lead, hz, hz, note[1] * step, song.lead_volume, start + int(offset * step * MIX_RATE)])
-			offset += note[1]
-		for eighth in 8:
-			var bass := _midi_to_hz(song.bass[bar] + song.bass_steps[eighth])
-			notes.append([Wave.TRIANGLE, bass, bass, 2 * step, 0.22, start + int(eighth * 2 * step * MIX_RATE)])
-		for sixteenth in 16:
-			var at := start + int(sixteenth * step * MIX_RATE)
-			match drums[sixteenth]:
-				"k":
-					notes.append([Wave.TRIANGLE, 150, 40, 0.12, 0.3, at])
-				"s":
-					notes.append([Wave.NOISE, 3000, 3000, 0.09, 0.07, at])
-				"h":
-					notes.append([Wave.NOISE, 6000, 6000, 0.025, 0.025, at])
+	var scale: Array = MINOR if song.minor else MAJOR
+	var notes: Array = [bar_length * bars * PASSES]
+	for pass_index in PASSES:
+		var full := pass_index > 0 ## The second pass is the loud one.
+		for bar in bars:
+			var start := (pass_index * bars + bar) * bar_length
+			_write_lead(notes, song, scale, melody[bar], start, step, full)
+			_write_arpeggio(notes, _chord(song.bass[bar], song.root, scale), start, step, full)
+			_write_bass(notes, song, bar, start, step)
+			var closing := full and bar == bars - 1
+			_write_drums(notes, DRUM_FILL if closing else song.drums, start, step, full)
 	return notes
 
 
-func _add_note(buffer: PackedFloat32Array, note: Array) -> void:
-	_add(buffer, _tone(note[0], note[1], note[2], note[3], note[4]), note[5])
+## The melody, doubled a diatonic third below once the arrangement fills out.
+func _write_lead(notes: Array, song: Dictionary, scale: Array, bar: Array, start: int, step: float, full: bool) -> void:
+	var wave: Wave = song.lead
+	var duty: float = song.get("duty", 0.5)
+	var offset := 0
+	for note: Array in bar:
+		if note[0] > 0:
+			var at := start + int(offset * step * MIX_RATE)
+			var seconds: float = note[1] * step
+			notes.append(_note(wave, _midi_to_hz(note[0]), seconds, LEAD_VOLUME * WAVE_GAIN[wave], "lead", at, duty, VIBRATO_DEPTH))
+			if full:
+				var below := _harmony(note[0], song.root, scale)
+				notes.append(_note(Wave.TRIANGLE, _midi_to_hz(below), seconds, HARMONY_VOLUME, "harmony", at))
+		offset += note[1]
+
+
+## The bar's chord, walked one tone at a time: eighths under the bare melody, sixteenths under
+## the full one, where it drops back a little to leave the harmony voice room.
+func _write_arpeggio(notes: Array, chord: Array, start: int, step: float, full: bool) -> void:
+	var every := 1 if full else 2
+	var volume := ARP_VOLUME * (0.8 if full else 1.0)
+	for i in 16 / every:
+		var at := start + int(i * every * step * MIX_RATE)
+		var midi: int = chord[ARP_STEPS[i % ARP_STEPS.size()]]
+		notes.append(_note(Wave.PULSE, _midi_to_hz(midi), step * every, volume, "arp", at, 0.25))
+
+
+func _write_bass(notes: Array, song: Dictionary, bar: int, start: int, step: float) -> void:
+	for eighth in 8:
+		var hz := _midi_to_hz(song.bass[bar] + song.bass_steps[eighth])
+		notes.append(_note(Wave.TRIANGLE, hz, 2 * step, BASS_VOLUME, "bass", start + int(eighth * 2 * step * MIX_RATE)))
+
+
+## The beat. On the full pass the gaps between hits pick up quiet off-beat hi-hats.
+func _write_drums(notes: Array, pattern: String, start: int, step: float, full: bool) -> void:
+	for sixteenth in 16:
+		var at := start + int(sixteenth * step * MIX_RATE)
+		var hit := pattern[sixteenth]
+		if hit == "." and full and sixteenth % 2 == 1:
+			hit = "g"
+		match hit:
+			"k":
+				notes.append(_note(Wave.TRIANGLE, 150.0, 0.13, 0.3, "fade", at, 0.5, 0.0, 42.0))
+			"s":
+				notes.append(_note(Wave.NOISE, 3000.0, 0.09, 0.07, "fade", at))
+				notes.append(_note(Wave.TRIANGLE, 220.0, 0.07, 0.07, "fade", at, 0.5, 0.0, 170.0))
+			"h":
+				notes.append(_note(Wave.NOISE, 6000.0, 0.025, 0.025, "fade", at))
+			"o":
+				notes.append(_note(Wave.NOISE, 5200.0, 0.11, 0.03, "fade", at))
+			"g":
+				notes.append(_note(Wave.NOISE, 6000.0, 0.02, 0.011, "fade", at))
+
+
+## One note for the synthesizer. `envelope` names an entry in ENVELOPES, `duty` only matters to
+## pulse waves, `vibrato` is a fraction of the frequency and `bend` the frequency the note slides
+## to, zero holding it steady. `at` is the sample of the loop the note starts on.
+func _note(wave: Wave, hz: float, seconds: float, volume: float, envelope: String, at: int, duty := 0.5, vibrato := 0.0, bend := 0.0) -> Dictionary:
+	return {
+		"wave": wave, "hz": hz, "bend": bend if bend > 0.0 else hz, "seconds": seconds, "volume": volume,
+		"envelope": envelope, "duty": duty, "vibrato": vibrato, "at": at,
+	}
+
+
+## The scale degree two steps under a melody note, for the second pass's harmony voice.
+func _harmony(midi: int, root: int, scale: Array) -> int:
+	var pitch := posmod(midi - root, 12)
+	var degree: int = scale.find(pitch)
+	if degree < 0:
+		return midi - 3 # A passing note, outside the key: a plain minor third below.
+	return midi - pitch + scale[posmod(degree - 2, 7)] - (12 if degree < 2 else 0)
+
+
+## The triad standing on a bass note, with whichever third and fifth the key allows, voiced
+## above middle C so the arpeggio sits between the bass and the melody.
+func _chord(bass: int, root: int, scale: Array) -> Array:
+	var base := bass
+	while base < 60:
+		base += 12
+	var third := 3 if scale.has(posmod(bass + 3 - root, 12)) else 4
+	var fifth := 6 if scale.has(posmod(bass + 6 - root, 12)) and not scale.has(posmod(bass + 7 - root, 12)) else 7
+	return [base, base + third, base + fifth, base + 12]
 
 
 func _loop(stream: AudioStreamWAV) -> AudioStreamWAV:
@@ -516,27 +641,67 @@ func _midi_to_hz(note: int) -> float:
 	return 440.0 * pow(2.0, (note - 69) / 12.0)
 
 
-## Mixes samples into the buffer starting at the offset, dropping what doesn't fit.
+## Mixes samples into the buffer at the offset, wrapping past the end so the tail of a note
+## lands on the top of the loop instead of being cut off where it restarts.
 func _add(buffer: PackedFloat32Array, samples: PackedFloat32Array, offset: int) -> void:
-	for i in mini(samples.size(), buffer.size() - offset):
-		buffer[offset + i] += samples[i]
+	var size := buffer.size()
+	for i in samples.size():
+		var at := (offset + i) % size
+		buffer[at] += samples[i]
+
+
+## Notes repeat all over a loop - every kick, every step of an arpeggio, every held bass note - so
+## each distinct one is synthesized once and mixed in wherever it lands.
+func _voice(voices: Dictionary, note: Dictionary) -> PackedFloat32Array:
+	var key := "%s|%d|%.3f|%.3f|%.4f|%.4f|%.3f|%.4f" % [
+		note.envelope, note.wave, note.hz, note.bend, note.seconds, note.volume, note.duty, note.vibrato,
+	]
+	if not voices.has(key):
+		voices[key] = _render(note)
+	return voices[key]
 
 
 ## A single note that slides from one frequency to another and fades out.
 func _tone(wave: Wave, from_hz: float, to_hz: float, duration: float, volume: float) -> PackedFloat32Array:
-	var count := int(duration * MIX_RATE)
+	return _render(_note(wave, from_hz, duration, volume, "fade", 0, 0.5, 0.0, to_hz))
+
+
+## Synthesizes a note: an attack, decay, sustain and release envelope over a wave that can slide and wobble.
+func _render(note: Dictionary) -> PackedFloat32Array:
+	var envelope: Dictionary = ENVELOPES[note.envelope]
+	var hold := maxi(int(note.seconds * MIX_RATE), 1)
+	var release := int(envelope.release * MIX_RATE)
+	var count := hold + release
 	var samples := PackedFloat32Array()
 	samples.resize(count)
+	var attack: float = maxf(envelope.attack, 1.0 / MIX_RATE) * MIX_RATE
+	var decay: float = (envelope.decay if envelope.decay > 0.0 else note.seconds) * MIX_RATE
+	var sustain: float = envelope.sustain
+	if sustain == 0.0 and envelope.decay > 0.0:
+		hold = mini(hold, int((envelope.attack + envelope.decay) * MIX_RATE)) # The rest would be silence.
+		count = hold + release
+		samples.resize(count)
+	## The level the note is held at when the release begins, so the fall never jumps.
+	var held := hold / attack if hold < attack else lerpf(1.0, sustain, minf((hold - attack) / decay, 1.0))
+	var wave: Wave = note.wave
+	var duty: float = note.duty
+	var from_hz: float = note.hz
+	var to_hz: float = note.bend
+	var volume: float = note.volume
+	var vibrato: float = note.vibrato
 	var phase := 0.0
 	var noise := 0.0
 	for i in count:
-		var t := float(i) / count
+		var hz := lerpf(from_hz, to_hz, float(i) / count)
+		if vibrato > 0.0:
+			var seconds := float(i) / MIX_RATE
+			hz *= 1.0 + vibrato * minf(seconds / VIBRATO_DELAY, 1.0) * sin(seconds * TAU * VIBRATO_HZ)
 		var previous := phase
-		phase = fmod(phase + lerpf(from_hz, to_hz, t) / MIX_RATE, 1.0)
+		phase = fmod(phase + hz / MIX_RATE, 1.0)
 		var value: float
 		match wave:
-			Wave.SQUARE:
-				value = 1.0 if phase < 0.5 else -1.0
+			Wave.PULSE:
+				value = 1.0 if phase < duty else -1.0
 			Wave.TRIANGLE:
 				value = 4.0 * absf(phase - 0.5) - 1.0
 			Wave.SINE:
@@ -546,8 +711,14 @@ func _tone(wave: Wave, from_hz: float, to_hz: float, duration: float, volume: fl
 				if phase < previous:
 					noise = randf_range(-1.0, 1.0)
 				value = noise
-		var attack := minf(float(i) / (ATTACK * MIX_RATE), 1.0)
-		samples[i] = value * volume * attack * (1.0 - t)
+		var amplitude: float
+		if i < attack:
+			amplitude = i / attack
+		elif i < hold:
+			amplitude = lerpf(1.0, sustain, minf((i - attack) / decay, 1.0))
+		else:
+			amplitude = held * (1.0 - float(i - hold) / release)
+		samples[i] = value * volume * amplitude
 	return samples
 
 

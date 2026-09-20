@@ -29,7 +29,7 @@ func _ready() -> void:
 		GameState.leave_level.call_deferred()
 		set_process(false)
 		return
-	Sfx.play_playlist()
+	Sfx.play_song(GameState.level_song())
 	level = data.instantiate()
 	level_container.add_child(level)
 	level.completed.connect(_on_level_completed)
